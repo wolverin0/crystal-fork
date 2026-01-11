@@ -22,6 +22,7 @@ import { registerCodexPanelHandlers } from './codexPanel';
 import { registerEditorPanelHandlers } from './editorPanel';
 import { registerNimbalystHandlers } from './nimbalyst';
 import { registerAnalyticsHandlers } from './analytics';
+import { registerSecurityHandlers } from './security';
 
 
 export function registerIpcHandlers(services: AppServices): void {
@@ -47,4 +48,6 @@ export function registerIpcHandlers(services: AppServices): void {
   registerEditorPanelHandlers(ipcMain, services);
   registerNimbalystHandlers(ipcMain, services);
   registerAnalyticsHandlers(ipcMain, services);
+  registerSecurityHandlers(ipcMain, services);
 } 
+ 

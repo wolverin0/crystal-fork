@@ -615,6 +615,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     categorizeResultCount: (count: number): Promise<IPCResponse<string>> => ipcRenderer.invoke('analytics:categorize-result-count', count),
     hashSessionId: (sessionId: string): Promise<IPCResponse<string>> => ipcRenderer.invoke('analytics:hash-session-id', sessionId),
   },
+
+  // Security operations
+  security: {
+    getStatus: (): Promise<IPCResponse<{ available: boolean; version?: string }>> => ipcRenderer.invoke('security:get-status'),
+    scanContent: (content: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('security:scan-content', content),
+    scanWorktree: (worktreePath: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('security:scan-worktree', worktreePath),
+  },
 });
 
 // Expose electron event listeners and utilities for permission requests

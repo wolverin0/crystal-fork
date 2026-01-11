@@ -361,6 +361,13 @@ interface ElectronAPI {
     categorizeResultCount: (count: number) => Promise<IPCResponse<string>>;
     hashSessionId: (sessionId: string) => Promise<IPCResponse<string>>;
   };
+
+  // Security operations
+  security: {
+    getStatus: () => Promise<{ success: boolean; available: boolean; version?: string; error?: string }>;
+    scanContent: (content: string) => Promise<IPCResponse<any[]>>;
+    scanWorktree: (worktreePath: string) => Promise<IPCResponse<any[]>>;
+  };
 }
 
 // Additional electron interface for IPC event listeners

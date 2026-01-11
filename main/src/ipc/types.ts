@@ -18,6 +18,7 @@ import type { AbstractCliManager } from '../services/panels/cli/AbstractCliManag
 import type { Logger } from '../utils/logger';
 import type { ArchiveProgressManager } from '../services/archiveProgressManager';
 import type { AnalyticsManager } from '../services/analyticsManager';
+import type { GitleaksService } from '../services/security/gitleaksService';
 
 export interface AppServices {
   app: App;
@@ -40,4 +41,6 @@ export interface AppServices {
   logger?: Logger;
   archiveProgressManager?: ArchiveProgressManager;
   analyticsManager?: AnalyticsManager;
+  gitleaksService: GitleaksService;
 } 
+ 

@@ -46,6 +46,8 @@ import * as os from 'os';
 import { panelManager } from './panelManager';
 import type { AnalyticsManager } from './analyticsManager';
 
+import { GitleaksService } from './security/gitleaksService';
+
 export class SessionManager extends EventEmitter {
   private activeSessions: Map<string, Session> = new Map();
   private runningScriptProcess: ChildProcess | null = null;
@@ -54,14 +56,16 @@ export class SessionManager extends EventEmitter {
   private terminalSessionManager: TerminalSessionManager;
   private autoContextBuffers: Map<string, SessionOutput[]> = new Map();
   private analyticsManager: AnalyticsManager | null = null;
+  private gitleaksService?: GitleaksService;
 
-  constructor(public db: DatabaseService, analyticsManager?: AnalyticsManager) {
+  constructor(public db: DatabaseService, analyticsManager?: AnalyticsManager, gitleaksService?: GitleaksService) {
     super();
     // Increase max listeners to prevent warnings when many components listen to events
     // This is expected since multiple SessionListItem components and project tree views listen to events
     this.setMaxListeners(100);
     this.analyticsManager = analyticsManager || null;
     this.terminalSessionManager = new TerminalSessionManager();
+    this.gitleaksService = gitleaksService;
     
     // Forward terminal output events to the terminal display
     this.terminalSessionManager.on('terminal-output', ({ sessionId, data, type }) => {
@@ -874,6 +878,33 @@ export class SessionManager extends EventEmitter {
       : output.data as string;
     
     this.db.addPanelOutput(panelId, output.type, dataToStore);
+
+    // Security Scan (The "Worker Bee")
+    if (this.gitleaksService && (output.type === 'stdout' || output.type === 'json')) {
+      const contentToScan = output.type === 'json' ? JSON.stringify(output.data) : output.data as string;
+      this.gitleaksService.scanContent(contentToScan).then(findings => {
+        if (findings.length > 0 && panel?.sessionId) {
+          const finding = findings[0];
+          const message = `[SECURITY ALERT] Hardcoded secret detected: ${finding.Description}`;
+          const details = `File: ${finding.File}\nRule: ${finding.RuleID}\nLine: ${finding.StartLine}`;
+          
+          this.addSessionError(panel.sessionId, message, details);
+          
+          // Log to MEMORIES.md (Future implementation could be more robust)
+          const session = this.getSession(panel.sessionId);
+          if (session?.worktreePath) {
+             const fs = require('fs');
+             const path = require('path');
+             const memoryPath = path.join(session.worktreePath, 'MEMORIES.md');
+             const timestamp = new Date().toISOString();
+             const logLine = `- [${timestamp}] [SECURITY] ${message} in ${finding.File}\n`;
+             fs.appendFileSync(memoryPath, logLine);
+          }
+        }
+      }).catch(err => {
+        console.error('[SessionManager] Security scan failed:', err);
+      });
+    }
 
     // Capture Claude's session ID from init/system messages for proper --resume handling
     try {
