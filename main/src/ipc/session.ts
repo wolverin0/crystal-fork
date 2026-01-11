@@ -16,6 +16,7 @@ import {
   createValidationError
 } from '../utils/sessionValidation';
 import type { SerializedArchiveTask } from '../services/archiveProgressManager';
+import { ClaudeStateService } from '../services/claudeStateService';
 
 export function registerSessionHandlers(ipcMain: IpcMain, services: AppServices): void {
   const {
@@ -29,6 +30,8 @@ export function registerSessionHandlers(ipcMain: IpcMain, services: AppServices)
     gitStatusManager,
     archiveProgressManager
   } = services;
+
+  const claudeStateService = new ClaudeStateService();
 
   // Helper function to get CLI manager for a specific tool
   // TODO: This will be used in the future to support multiple CLI tools
@@ -71,6 +74,106 @@ export function registerSessionHandlers(ipcMain: IpcMain, services: AppServices)
       return { success: false, error: 'Failed to get session' };
     }
   });
+
+  ipcMain.handle('sessions:get-linked-plan', async (_event, sessionId: string) => {
+    try {
+      const session = await sessionManager.getSession(sessionId);
+      if (!session) {
+        return { success: false, error: 'Session not found' };
+      }
+
+      let targetClaudeSessionId = sessionManager.getClaudeSessionId(sessionId);
+      if (!targetClaudeSessionId) {
+          const panels = panelManager.getPanelsForSession(sessionId);
+          const claudePanel = panels.find(p => p.type === 'claude');
+          if (claudePanel) {
+              targetClaudeSessionId = sessionManager.getPanelClaudeSessionId(claudePanel.id);
+          }
+      }
+
+      if (!targetClaudeSessionId) {
+          return { success: false, error: 'No linked Claude session found' };
+      }
+
+      const linkedPlan = await claudeStateService.getLinkedPlan(session.worktreePath, targetClaudeSessionId);
+      
+      if (!linkedPlan) {
+          return { success: false, error: 'Plan not found' };
+      }
+
+            return { success: true, data: linkedPlan };
+
+      
+
+          } catch (error) {
+
+            console.error('Failed to get linked plan:', error);
+
+            return { success: false, error: 'Failed to get linked plan' };
+
+          }
+
+        });
+
+      
+
+        ipcMain.handle('sessions:get-claude-md-status', async (_event, projectRoot: string) => {
+
+          try {
+
+            const status = await claudeStateService.getClaudeMdStatus(projectRoot);
+
+            return { success: true, data: status };
+
+          } catch (error) {
+
+            console.error('Failed to get CLAUDE.md status:', error);
+
+            return { success: false, error: 'Failed to get CLAUDE.md status' };
+
+          }
+
+        });
+
+      
+
+        ipcMain.handle('sessions:backup-claude-md', async (_event, projectRoot: string) => {
+
+          try {
+
+            const backupPath = await claudeStateService.backupClaudeMd(projectRoot);
+
+            return { success: true, data: backupPath };
+
+          } catch (error) {
+
+            console.error('Failed to backup CLAUDE.md:', error);
+
+            return { success: false, error: error instanceof Error ? error.message : 'Failed to backup CLAUDE.md' };
+
+          }
+
+        });
+
+      
+
+        ipcMain.handle('sessions:get-metaclaude-template', async () => {
+
+          try {
+
+            const template = await claudeStateService.getMetaclaudeTemplate();
+
+            return { success: true, data: template };
+
+          } catch (error) {
+
+            console.error('Failed to get metaclaude template:', error);
+
+            return { success: false, error: 'Failed to get template' };
+
+          }
+
+        });
 
   ipcMain.handle('sessions:get-all-with-projects', async () => {
     try {

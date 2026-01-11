@@ -104,6 +104,26 @@ export class API {
       return window.electronAPI.sessions.getConversationMessages(sessionId);
     },
 
+    async getLinkedPlan(sessionId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.sessions.getLinkedPlan(sessionId);
+    },
+
+    async getClaudeMdStatus(projectRoot: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.sessions.getClaudeMdStatus(projectRoot);
+    },
+
+    async backupClaudeMd(projectRoot: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.sessions.backupClaudeMd(projectRoot);
+    },
+
+    async getMetaclaudeTemplate() {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.sessions.getMetaclaudeTemplate();
+    },
+
     async markViewed(sessionId: string) {
       if (!isElectron()) throw new Error('Electron API not available');
       return window.electronAPI.sessions.markViewed(sessionId);

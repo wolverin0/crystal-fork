@@ -51,9 +51,15 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'analytics' | 'stravu'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'analytics' | 'stravu' | 'telegram'>('general');
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
   const [previousAnalyticsEnabled, setPreviousAnalyticsEnabled] = useState(true);
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramBotToken, setTelegramBotToken] = useState('');
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [telegramOwnerId, setTelegramOwnerId] = useState('');
+  const [telegramNotificationsEnabled, setTelegramNotificationsEnabled] = useState(true);
+  const [telegramInteractiveEnabled, setTelegramInteractiveEnabled] = useState(true);
   const { updateSettings } = useNotifications();
   const { theme, toggleTheme } = useTheme();
   const { fetchConfig: refreshConfigStore } = useConfigStore();
@@ -62,7 +68,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     if (isOpen) {
       fetchConfig();
       // Get platform for PATH help text
-      window.electronAPI.getPlatform().then(setPlatform);
+      if (window.electronAPI) {
+        window.electronAPI.getPlatform().then(setPlatform).catch(console.error);
+      }
     }
   }, [isOpen]);
 
@@ -97,6 +105,16 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         const enabled = data.analytics.enabled !== false; // Default to true
         setAnalyticsEnabled(enabled);
         setPreviousAnalyticsEnabled(enabled);
+      }
+
+      // Load telegram settings
+      if (data.telegram) {
+        setTelegramEnabled(data.telegram.enabled || false);
+        setTelegramBotToken(data.telegram.botToken || '');
+        setTelegramChatId(data.telegram.chatId || '');
+        setTelegramOwnerId(data.telegram.ownerId || '');
+        setTelegramNotificationsEnabled(data.telegram.notificationsEnabled !== false);
+        setTelegramInteractiveEnabled(data.telegram.interactiveEnabled !== false);
       }
     } catch (err) {
       setError('Failed to load configuration');
@@ -145,6 +163,14 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         notifications: notificationSettings,
         analytics: {
           enabled: analyticsEnabled
+        },
+        telegram: {
+          enabled: telegramEnabled,
+          botToken: telegramBotToken,
+          chatId: telegramChatId,
+          ownerId: telegramOwnerId,
+          notificationsEnabled: telegramNotificationsEnabled,
+          interactiveEnabled: telegramInteractiveEnabled
         }
       });
 
@@ -219,6 +245,16 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             }`}
           >
             Stravu Integration
+          </button>
+          <button
+            onClick={() => setActiveTab('telegram')}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'telegram'
+                ? 'text-interactive border-b-2 border-interactive bg-interactive/5'
+                : 'text-text-tertiary hover:text-text-primary hover:bg-surface-hover'
+            }`}
+          >
+            Telegram Bot
           </button>
         </div>
 
@@ -683,10 +719,92 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             </CollapsibleCard>
           </div>
         )}
+
+        {activeTab === 'telegram' && (
+          <form id="telegram-form" onSubmit={handleSubmit} className="space-y-6">
+            <CollapsibleCard
+              title="Telegram Integration"
+              subtitle="Connect Crystal to a Telegram bot for remote management"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              }
+              defaultExpanded={true}
+            >
+              <div className="space-y-6">
+                <SettingsSection
+                  title="Enable Bot"
+                  description="Activate Telegram notifications and interactive commands"
+                >
+                  <Checkbox
+                    label="Enable Telegram Bot"
+                    checked={telegramEnabled}
+                    onChange={(e) => setTelegramEnabled(e.target.checked)}
+                  />
+                </SettingsSection>
+
+                {telegramEnabled && (
+                  <>
+                    <SettingsSection
+                      title="Bot Configuration"
+                      description="Enter your bot credentials from @BotFather"
+                    >
+                      <div className="space-y-4">
+                        <Input
+                          label="Bot Token"
+                          type="password"
+                          value={telegramBotToken}
+                          onChange={(e) => setTelegramBotToken(e.target.value)}
+                          placeholder="5749760060:AAG..."
+                          fullWidth
+                        />
+                        <Input
+                          label="Chat ID"
+                          value={telegramChatId}
+                          onChange={(e) => setTelegramChatId(e.target.value)}
+                          placeholder="2128295779"
+                          fullWidth
+                          helperText="ID of the chat where notifications will be sent"
+                        />
+                        <Input
+                          label="Owner ID (Optional)"
+                          value={telegramOwnerId}
+                          onChange={(e) => setTelegramOwnerId(e.target.value)}
+                          placeholder="2128295779"
+                          fullWidth
+                          helperText="Your personal Telegram ID for admin authorization"
+                        />
+                      </div>
+                    </SettingsSection>
+
+                    <SettingsSection
+                      title="Features"
+                      description="Customize what the bot can do"
+                    >
+                      <div className="space-y-2">
+                        <Checkbox
+                          label="Send Notifications"
+                          checked={telegramNotificationsEnabled}
+                          onChange={(e) => setTelegramNotificationsEnabled(e.target.checked)}
+                        />
+                        <Checkbox
+                          label="Enable Interactive Commands"
+                          checked={telegramInteractiveEnabled}
+                          onChange={(e) => setTelegramInteractiveEnabled(e.target.checked)}
+                        />
+                      </div>
+                    </SettingsSection>
+                  </>
+                )}
+              </div>
+            </CollapsibleCard>
+          </form>
+        )}
       </ModalBody>
 
       {/* Footer */}
-      {(activeTab === 'general' || activeTab === 'notifications' || activeTab === 'analytics') && (
+      {(activeTab === 'general' || activeTab === 'notifications' || activeTab === 'analytics' || activeTab === 'telegram') && (
         <ModalFooter>
           <Button
             type="button"
@@ -697,8 +815,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             Cancel
           </Button>
           <Button
-            type={activeTab === 'general' ? 'submit' : 'button'}
-            form={activeTab === 'general' ? 'settings-form' : undefined}
+            type={(activeTab === 'general' || activeTab === 'telegram') ? 'submit' : 'button'}
+            form={(activeTab === 'general' || activeTab === 'telegram') ? (activeTab === 'general' ? 'settings-form' : 'telegram-form') : undefined}
             onClick={activeTab === 'notifications' ? (e) => handleSubmit(e as React.FormEvent) : undefined}
             disabled={isSubmitting}
             loading={isSubmitting}

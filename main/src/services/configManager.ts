@@ -57,6 +57,14 @@ export class ConfigManager extends EventEmitter {
           checkpointPrefix: 'checkpoint: '
         }
       },
+      telegram: {
+        enabled: false,
+        botToken: undefined,
+        chatId: undefined,
+        ownerId: undefined,
+        notificationsEnabled: true,
+        interactiveEnabled: true
+      },
       analytics: {
         enabled: false, // Opt-in: disabled by default until user consents
         posthogApiKey: 'phc_uwOqT2KUa4C9Qx5WbEPwQSN9mUCoSGFg1aY0b670ft5',

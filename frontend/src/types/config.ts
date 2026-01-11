@@ -46,6 +46,15 @@ export interface AppConfig {
   };
   // Crystal commit footer setting (enabled by default)
   enableCrystalFooter?: boolean;
+  // Telegram bot settings
+  telegram?: {
+    enabled: boolean;
+    botToken?: string;
+    chatId?: string;
+    ownerId?: string;
+    notificationsEnabled: boolean;
+    interactiveEnabled: boolean;
+  };
   // PostHog analytics settings
   analytics?: {
     enabled: boolean;

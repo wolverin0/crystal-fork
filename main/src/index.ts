@@ -25,6 +25,7 @@ import { PermissionIpcServer } from './services/permissionIpcServer';
 import { VersionChecker } from './services/versionChecker';
 import { StravuAuthManager } from './services/stravuAuthManager';
 import { StravuNotebookService } from './services/stravuNotebookService';
+import { TelegramService } from './services/telegramService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -603,6 +604,14 @@ async function initializeServices() {
   versionChecker = new VersionChecker(configManager, logger);
   stravuAuthManager = new StravuAuthManager(logger);
   stravuNotebookService = new StravuNotebookService(stravuAuthManager, logger);
+
+  // Initialize Telegram Service
+  try {
+    const telegramService = new TelegramService(sessionManager, configManager);
+    console.log('[Main] Telegram service initialized');
+  } catch (error) {
+    console.error('[Main] Failed to initialize Telegram service:', error);
+  }
 
   taskQueue = new TaskQueue({
     sessionManager,

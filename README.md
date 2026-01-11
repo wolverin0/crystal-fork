@@ -89,6 +89,18 @@ When everything looks good:
 
 ---
 
+## ✨ Feature Highlights
+
+### 🔗 Linked Plans & Context
+Crystal automatically links your session to its corresponding Claude Plan, giving you immediate access to the broader context of your task. A visual indicator allows you to view the plan without leaving the UI.
+
+### 📝 CLAUDE.md Management ("Rethink")
+Keep your project documentation fresh automatically. Crystal monitors `CLAUDE.md` for staleness and offers a one-click "Rethink" workflow that uses the latest Metaclaude template to regenerate documentation based on your current codebase state.
+
+[Read more about Linked Plans and Documentation Features](docs/features/01_linked_plans_and_docs.md)
+
+---
+
 ## Installation
 
 ### Download Pre-built Binaries

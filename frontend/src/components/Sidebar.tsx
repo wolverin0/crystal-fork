@@ -27,6 +27,7 @@ export function Sidebar({ onHelpClick, onAboutClick, onPromptHistoryClick, width
     // Fetch version info and UI state on component mount
     const fetchVersion = async () => {
       try {
+        if (!window.electronAPI) return;
         console.log('[Sidebar Debug] Fetching version info...');
         const result = await window.electronAPI.getVersionInfo();
         console.log('[Sidebar Debug] Version info result:', result);
@@ -54,6 +55,7 @@ export function Sidebar({ onHelpClick, onAboutClick, onPromptHistoryClick, width
 
     const loadUIState = async () => {
       try {
+        if (!window.electronAPI?.uiState) return;
         const result = await window.electronAPI.uiState.getExpanded();
         if (result.success && result.data) {
           setSessionSortAscending(result.data.sessionSortAscending ?? false);
@@ -73,7 +75,9 @@ export function Sidebar({ onHelpClick, onAboutClick, onPromptHistoryClick, width
 
     // Save to database via electronAPI
     try {
-      await window.electronAPI.uiState.saveSessionSortAscending(newValue);
+      if (window.electronAPI?.uiState) {
+        await window.electronAPI.uiState.saveSessionSortAscending(newValue);
+      }
     } catch (error) {
       console.error('Failed to save session sort order:', error);
     }

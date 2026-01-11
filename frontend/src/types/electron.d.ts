@@ -66,6 +66,10 @@ interface ElectronAPI {
     getStatistics: (sessionId: string) => Promise<IPCResponse>;
     getConversation: (sessionId: string) => Promise<IPCResponse>;
     getConversationMessages: (sessionId: string) => Promise<IPCResponse>;
+    getLinkedPlan: (sessionId: string) => Promise<IPCResponse<{ name: string; content: string; path: string }>>;
+    getClaudeMdStatus: (projectRoot: string) => Promise<IPCResponse<{ exists: boolean; lastUpdated?: Date; stale: boolean }>>;
+    backupClaudeMd: (projectRoot: string) => Promise<IPCResponse<string>>;
+    getMetaclaudeTemplate: () => Promise<IPCResponse<string>>;
     generateCompactedContext: (sessionId: string) => Promise<IPCResponse>;
     markViewed: (sessionId: string) => Promise<IPCResponse>;
     stop: (sessionId: string) => Promise<IPCResponse>;
