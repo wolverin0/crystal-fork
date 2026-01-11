@@ -4,6 +4,7 @@ export interface Project {
   path: string;
   system_prompt?: string | null;
   run_script?: string | null;
+  test_script?: string | null;
   build_script?: string | null;
   active: boolean;
   created_at: string;
@@ -31,6 +32,7 @@ export interface CreateProjectRequest {
   path: string;
   systemPrompt?: string;
   runScript?: string;
+  testScript?: string;
   buildScript?: string;
   openIdeCommand?: string;
   commitMode?: 'structured' | 'checkpoint' | 'disabled';
@@ -43,6 +45,7 @@ export interface UpdateProjectRequest {
   path?: string;
   system_prompt?: string | null;
   run_script?: string | null;
+  test_script?: string | null;
   build_script?: string | null;
   active?: boolean;
   open_ide_command?: string | null;

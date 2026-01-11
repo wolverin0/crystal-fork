@@ -368,6 +368,13 @@ interface ElectronAPI {
     scanContent: (content: string) => Promise<IPCResponse<any[]>>;
     scanWorktree: (worktreePath: string) => Promise<IPCResponse<any[]>>;
   };
+
+  // Testing operations
+  testing: {
+    getStatus: () => Promise<{ success: boolean; available: boolean; version?: string; error?: string }>;
+    startWatcher: (sessionId: string, worktreePath: string, testCommand: string) => Promise<IPCResponse>;
+    stopWatcher: (sessionId: string) => Promise<IPCResponse>;
+  };
 }
 
 // Additional electron interface for IPC event listeners

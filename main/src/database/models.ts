@@ -4,6 +4,7 @@ export interface Project {
   path: string;
   system_prompt?: string | null;
   run_script?: string | null;
+  test_script?: string | null;
   build_script?: string | null;
   active: boolean;
   created_at: string;

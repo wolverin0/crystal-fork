@@ -19,6 +19,7 @@ import type { Logger } from '../utils/logger';
 import type { ArchiveProgressManager } from '../services/archiveProgressManager';
 import type { AnalyticsManager } from '../services/analyticsManager';
 import type { GitleaksService } from '../services/security/gitleaksService';
+import type { WatchexecService } from '../services/testing/watchexecService';
 
 export interface AppServices {
   app: App;
@@ -42,5 +43,6 @@ export interface AppServices {
   archiveProgressManager?: ArchiveProgressManager;
   analyticsManager?: AnalyticsManager;
   gitleaksService: GitleaksService;
+  watchexecService: WatchexecService;
 } 
  

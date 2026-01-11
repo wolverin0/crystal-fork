@@ -22,6 +22,7 @@ export default function ProjectSettings({ project, isOpen, onClose, onUpdate, on
   const [path, setPath] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [runScript, setRunScript] = useState('');
+  const [testScript, setTestScript] = useState('');
   const [buildScript, setBuildScript] = useState('');
   const [currentBranch, setCurrentBranch] = useState<string | null>(null);
   const [openIdeCommand, setOpenIdeCommand] = useState('');
@@ -36,6 +37,7 @@ export default function ProjectSettings({ project, isOpen, onClose, onUpdate, on
       setPath(project.path);
       setSystemPrompt(project.system_prompt || '');
       setRunScript(project.run_script || '');
+      setTestScript(project.test_script || '');
       setBuildScript(project.build_script || '');
       // Fetch the current branch when dialog opens
       if (project.path) {
@@ -61,6 +63,7 @@ export default function ProjectSettings({ project, isOpen, onClose, onUpdate, on
         path,
         system_prompt: systemPrompt || null,
         run_script: runScript || null,
+        test_script: testScript || null,
         build_script: buildScript || null,
         open_ide_command: openIdeCommand || null,
         worktree_folder: worktreeFolder || null
@@ -328,6 +331,21 @@ export default function ProjectSettings({ project, isOpen, onClose, onUpdate, on
                   rows={4}
                   placeholder="npm run dev"
                   className="font-mono text-sm bg-transparent border-0 p-3 focus:ring-0 resize-none"
+                  fullWidth
+                />
+              </Card>
+            </FieldWithTooltip>
+
+            <FieldWithTooltip
+              label="Auto-Test Command (Watchexec)"
+              tooltip="A single command that runs automatically via Watchexec whenever files change. Ideal for instant feedback on test failures."
+            >
+              <Card variant="bordered" padding="sm" className="bg-surface-secondary/50">
+                <Input
+                  value={testScript}
+                  onChange={(e) => setTestScript(e.target.value)}
+                  placeholder="npm test"
+                  className="font-mono text-sm bg-transparent border-0 p-3 focus:ring-0"
                   fullWidth
                 />
               </Card>

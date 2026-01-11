@@ -27,6 +27,7 @@ import { StravuAuthManager } from './services/stravuAuthManager';
 import { StravuNotebookService } from './services/stravuNotebookService';
 import { TelegramService } from './services/telegramService';
 import { GitleaksService } from './services/security/gitleaksService';
+import { WatchexecService } from './services/testing/watchexecService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -88,6 +89,7 @@ let stravuNotebookService: StravuNotebookService;
 let archiveProgressManager: ArchiveProgressManager;
 let analyticsManager: AnalyticsManager;
 let gitleaksService: GitleaksService;
+let watchexecService: WatchexecService;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -552,11 +554,14 @@ async function initializeServices() {
   gitleaksService = new GitleaksService(logger);
   await gitleaksService.checkAvailability();
 
+  watchexecService = new WatchexecService(logger);
+  await watchexecService.checkAvailability();
+
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
   logsManager.setAnalyticsManager(analyticsManager);
 
-  sessionManager = new SessionManager(databaseService, analyticsManager, gitleaksService);
+  sessionManager = new SessionManager(databaseService, analyticsManager, logger, gitleaksService, watchexecService);
   sessionManager.initializeFromDatabase();
 
   archiveProgressManager = new ArchiveProgressManager();
@@ -650,6 +655,7 @@ async function initializeServices() {
     archiveProgressManager,
     analyticsManager,
     gitleaksService,
+    watchexecService,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

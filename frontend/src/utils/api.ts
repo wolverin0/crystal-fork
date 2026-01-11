@@ -598,6 +598,24 @@ export class API {
       return window.electronAPI.security.scanWorktree(worktreePath);
     },
   };
+
+  // Testing operations
+  static testing = {
+    async getStatus() {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.testing.getStatus();
+    },
+
+    async startWatcher(sessionId: string, worktreePath: string, testCommand: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.testing.startWatcher(sessionId, worktreePath, testCommand);
+    },
+
+    async stopWatcher(sessionId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.testing.stopWatcher(sessionId);
+    },
+  };
 }
 
 // Legacy support - removed as migration is complete

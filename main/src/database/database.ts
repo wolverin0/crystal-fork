@@ -330,6 +330,13 @@ export class DatabaseService {
       this.db.prepare("ALTER TABLE projects ADD COLUMN main_branch TEXT").run();
     }
 
+    // Add test_script column to projects table if it doesn't exist
+    const hasTestScriptColumn = projectsTableInfo.some((col: SqliteTableInfo) => col.name === 'test_script');
+    
+    if (!hasTestScriptColumn) {
+      this.db.prepare("ALTER TABLE projects ADD COLUMN test_script TEXT").run();
+    }
+
     // Add build_script column to projects table if it doesn't exist
     const hasBuildScriptColumn = projectsTableInfo.some((col: SqliteTableInfo) => col.name === 'build_script');
     
@@ -1299,25 +1306,22 @@ export class DatabaseService {
   }
 
   // Project operations
-  createProject(name: string, path: string, systemPrompt?: string, runScript?: string, buildScript?: string, defaultPermissionMode?: 'approve' | 'ignore', openIdeCommand?: string, commitMode?: 'structured' | 'checkpoint' | 'disabled', commitStructuredPromptTemplate?: string, commitCheckpointPrefix?: string): Project {
-    // Get the max display_order for projects
-    const maxOrderResult = this.db.prepare(`
-      SELECT MAX(display_order) as max_order 
-      FROM projects
-    `).get() as { max_order: number | null };
-    
-    const displayOrder = (maxOrderResult?.max_order ?? -1) + 1;
-    
-    const result = this.db.prepare(`
-      INSERT INTO projects (name, path, system_prompt, run_script, build_script, default_permission_mode, open_ide_command, display_order, commit_mode, commit_structured_prompt_template, commit_checkpoint_prefix)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name, path, systemPrompt || null, runScript || null, buildScript || null, defaultPermissionMode || 'ignore', openIdeCommand || null, displayOrder, commitMode || 'checkpoint', commitStructuredPromptTemplate || null, commitCheckpointPrefix || 'checkpoint: ');
-    
-    const project = this.getProject(result.lastInsertRowid as number);
-    if (!project) {
-      throw new Error('Failed to create project');
-    }
-    return project;
+  createProject(name: string, path: string, systemPrompt?: string, runScript?: string, testScript?: string, buildScript?: string, defaultPermissionMode?: 'approve' | 'ignore', openIdeCommand?: string, commitMode?: 'structured' | 'checkpoint' | 'disabled', commitStructuredPromptTemplate?: string, commitCheckpointPrefix?: string): Project {
+    return this.transaction(() => {
+      const now = new Date().toISOString();
+      const result = this.db.prepare(`
+        INSERT INTO projects (
+          name, path, system_prompt, run_script, test_script, build_script, active, created_at, updated_at, 
+          default_permission_mode, open_ide_command, commit_mode, commit_structured_prompt_template, commit_checkpoint_prefix
+        ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        name, path, systemPrompt || null, runScript || null, testScript || null, buildScript || null, 
+        now, now, defaultPermissionMode || 'ignore', openIdeCommand || null, 
+        commitMode || 'checkpoint', commitStructuredPromptTemplate || null, commitCheckpointPrefix || 'checkpoint: '
+      );
+
+      return this.getProject(result.lastInsertRowid as number)!;
+    });
   }
 
   getProject(id: number): Project | undefined {
@@ -1364,6 +1368,10 @@ export class DatabaseService {
     if (updates.run_script !== undefined) {
       fields.push('run_script = ?');
       values.push(updates.run_script);
+    }
+    if (updates.test_script !== undefined) {
+      fields.push('test_script = ?');
+      values.push(updates.test_script);
     }
     if (updates.build_script !== undefined) {
       fields.push('build_script = ?');

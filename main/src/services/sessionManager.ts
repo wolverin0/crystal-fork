@@ -45,8 +45,9 @@ import { withLock } from '../utils/mutex';
 import * as os from 'os';
 import { panelManager } from './panelManager';
 import type { AnalyticsManager } from './analyticsManager';
-
+import type { Logger } from '../utils/logger';
 import { GitleaksService } from './security/gitleaksService';
+import { WatchexecService } from './testing/watchexecService';
 
 export class SessionManager extends EventEmitter {
   private activeSessions: Map<string, Session> = new Map();
@@ -57,8 +58,15 @@ export class SessionManager extends EventEmitter {
   private autoContextBuffers: Map<string, SessionOutput[]> = new Map();
   private analyticsManager: AnalyticsManager | null = null;
   private gitleaksService?: GitleaksService;
+  private watchexecService?: WatchexecService;
 
-  constructor(public db: DatabaseService, analyticsManager?: AnalyticsManager, gitleaksService?: GitleaksService) {
+  constructor(
+    public db: DatabaseService, 
+    analyticsManager?: AnalyticsManager,
+    private logger?: Logger,
+    gitleaksService?: GitleaksService,
+    watchexecService?: WatchexecService
+  ) {
     super();
     // Increase max listeners to prevent warnings when many components listen to events
     // This is expected since multiple SessionListItem components and project tree views listen to events
@@ -66,18 +74,21 @@ export class SessionManager extends EventEmitter {
     this.analyticsManager = analyticsManager || null;
     this.terminalSessionManager = new TerminalSessionManager();
     this.gitleaksService = gitleaksService;
-    
-    // Forward terminal output events to the terminal display
-    this.terminalSessionManager.on('terminal-output', ({ sessionId, data, type }) => {
-      // Terminal PTY output goes directly to the terminal view
-      // Terminal is now independent and not used for run scripts
-      this.emit('terminal-output', { sessionId, data, type });
-    });
-    
-    // Forward zombie process detection events
-    this.terminalSessionManager.on('zombie-processes-detected', (data) => {
-      this.emit('zombie-processes-detected', data);
-    });
+    this.watchexecService = watchexecService;
+
+    // Listen to test watcher output
+    if (this.watchexecService) {
+      this.watchexecService.on('output', ({ sessionId, type, data }) => {
+        const cleanData = data.toString().trim();
+        // We report watcher output to the session log
+        addSessionLog(sessionId, type === 'stderr' ? 'error' : 'info', `[Auto-Test] ${cleanData}`, 'Watchexec');
+        
+        // If it looks like a failure (highly heuristic for now)
+        if (cleanData.toLowerCase().includes('fail') || cleanData.toLowerCase().includes('error')) {
+           this.addSessionError(sessionId, 'Auto-Test Failure detected', cleanData);
+        }
+      });
+    }
   }
 
   setActiveProject(project: Project): void {
@@ -289,6 +300,11 @@ export class SessionManager extends EventEmitter {
   }
 
   getSession(id: string): Session | undefined {
+    // Check active sessions first to get memory-only state
+    if (this.activeSessions.has(id)) {
+      return this.activeSessions.get(id);
+    }
+
     const dbSession = this.db.getSession(id);
     return dbSession ? this.convertDbSessionToSession(dbSession) : undefined;
   }
@@ -395,6 +411,15 @@ export class SessionManager extends EventEmitter {
     session.toolType = toolType || session.toolType;
     
     this.activeSessions.set(session.id, session);
+
+    // Start auto-test watcher if configured
+    if (this.watchexecService && session.projectId) {
+      const project = this.db.getProject(session.projectId);
+      if (project?.test_script) {
+        this.watchexecService.startWatcher(session.id, session.worktreePath, project.test_script);
+      }
+    }
+
     // Don't emit the event here - let the caller decide when to emit it
     // this.emit('session-created', session);
 
@@ -1652,6 +1677,11 @@ export class SessionManager extends EventEmitter {
   }
 
   async cleanup(): Promise<void> {
+    // Stop all test watchers
+    if (this.watchexecService) {
+      this.watchexecService.stopAll();
+    }
+
     this.stopRunningScript();
     await this.terminalSessionManager.cleanup();
   }
