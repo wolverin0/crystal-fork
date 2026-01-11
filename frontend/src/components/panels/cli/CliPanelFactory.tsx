@@ -81,6 +81,7 @@ LoadingFallback.displayName = 'CliLoadingFallback';
 const ClaudePanel = lazy(() => import('../claude/ClaudePanel'));
 const CodexPanel = lazy(() => import('../codex/CodexPanel'));
 const LazygitPanel = lazy(() => import('../lazygit/LazygitPanel'));
+const BrowserPanel = lazy(() => import('../browser/BrowserPanel'));
 
 /**
  * Factory component that dynamically renders the appropriate CLI panel
@@ -94,6 +95,7 @@ export const CliPanelFactory: React.FC<CliPanelFactoryProps> = React.memo(({ pan
     if (panel.type === 'claude') return 'claude';
     if (panel.type === 'codex') return 'codex';
     if (panel.type === 'lazygit') return 'lazygit';
+    if (panel.type === 'browser') return 'browser';
     
     // For future CLI panels, extract from panel data
     const cliPanel = panel as CliPanel;
@@ -120,6 +122,12 @@ export const CliPanelFactory: React.FC<CliPanelFactoryProps> = React.memo(({ pan
       return (
         <Suspense fallback={<LoadingFallback cliToolId={cliToolId} />}>
           <LazygitPanel panel={panel} isActive={isActive} />
+        </Suspense>
+      );
+    case 'browser':
+      return (
+        <Suspense fallback={<LoadingFallback cliToolId={cliToolId} />}>
+          <BrowserPanel panel={panel} isActive={isActive} />
         </Suspense>
       );
     default:
@@ -153,7 +161,7 @@ CliPanelFactory.displayName = 'CliPanelFactory';
  */
 export const useCliToolSupport = (cliToolId: string) => {
   return useMemo(() => {
-    const supportedTools = ['claude', 'codex', 'lazygit'];
+    const supportedTools = ['claude', 'codex', 'lazygit', 'browser'];
     
     return {
       isSupported: supportedTools.includes(cliToolId),

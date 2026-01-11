@@ -622,6 +622,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     scanContent: (content: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('security:scan-content', content),
     scanWorktree: (worktreePath: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('security:scan-worktree', worktreePath),
   },
+
+  // Browser operations
+  browser: {
+    attach: (panelId: string, bounds: { x: number; y: number; width: number; height: number }): Promise<IPCResponse> => ipcRenderer.invoke('browser:attach', panelId, bounds),
+    detach: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:detach', panelId),
+    navigate: (panelId: string, url: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:navigate', panelId, url),
+    goBack: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:go-back', panelId),
+    goForward: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:go-forward', panelId),
+    reload: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:reload', panelId),
+  },
 });
 
 // Expose electron event listeners and utilities for permission requests

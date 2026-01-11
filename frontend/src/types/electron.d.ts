@@ -375,6 +375,16 @@ interface ElectronAPI {
     startWatcher: (sessionId: string, worktreePath: string, testCommand: string) => Promise<IPCResponse>;
     stopWatcher: (sessionId: string) => Promise<IPCResponse>;
   };
+
+  // Browser operations
+  browser: {
+    attach: (panelId: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<IPCResponse>;
+    detach: (panelId: string) => Promise<IPCResponse>;
+    navigate: (panelId: string, url: string) => Promise<IPCResponse>;
+    goBack: (panelId: string) => Promise<IPCResponse>;
+    goForward: (panelId: string) => Promise<IPCResponse>;
+    reload: (panelId: string) => Promise<IPCResponse>;
+  };
 }
 
 // Additional electron interface for IPC event listeners

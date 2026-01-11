@@ -616,6 +616,39 @@ export class API {
       return window.electronAPI.testing.stopWatcher(sessionId);
     },
   };
+
+  // Browser operations
+  static browser = {
+    async attach(panelId: string, bounds: { x: number; y: number; width: number; height: number }) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.attach(panelId, bounds);
+    },
+
+    async detach(panelId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.detach(panelId);
+    },
+
+    async navigate(panelId: string, url: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.navigate(panelId, url);
+    },
+
+    async goBack(panelId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.goBack(panelId);
+    },
+
+    async goForward(panelId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.goForward(panelId);
+    },
+
+    async reload(panelId: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.browser.reload(panelId);
+    },
+  };
 }
 
 // Legacy support - removed as migration is complete

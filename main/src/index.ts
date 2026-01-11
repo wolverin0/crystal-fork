@@ -28,6 +28,7 @@ import { StravuNotebookService } from './services/stravuNotebookService';
 import { TelegramService } from './services/telegramService';
 import { GitleaksService } from './services/security/gitleaksService';
 import { WatchexecService } from './services/testing/watchexecService';
+import { BrowserViewManager } from './services/browser/browserViewManager';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -90,6 +91,7 @@ let archiveProgressManager: ArchiveProgressManager;
 let analyticsManager: AnalyticsManager;
 let gitleaksService: GitleaksService;
 let watchexecService: WatchexecService;
+let browserViewManager: BrowserViewManager;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -557,6 +559,8 @@ async function initializeServices() {
   watchexecService = new WatchexecService(logger);
   await watchexecService.checkAvailability();
 
+  browserViewManager = new BrowserViewManager(logger);
+
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
   logsManager.setAnalyticsManager(analyticsManager);
@@ -656,6 +660,7 @@ async function initializeServices() {
     analyticsManager,
     gitleaksService,
     watchexecService,
+    browserViewManager,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

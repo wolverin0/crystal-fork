@@ -7,7 +7,7 @@ export interface ToolPanel {
   metadata: ToolPanelMetadata;   // Creation time, position, etc.
 }
 
-export type ToolPanelType = 'terminal' | 'claude' | 'codex' | 'lazygit' | 'diff' | 'editor' | 'logs' | 'dashboard' | 'setup-tasks'; // Will expand later
+export type ToolPanelType = 'terminal' | 'claude' | 'codex' | 'lazygit' | 'browser' | 'diff' | 'editor' | 'logs' | 'dashboard' | 'setup-tasks'; // Will expand later
 
 export interface ToolPanelState {
   isActive: boolean;
@@ -305,6 +305,14 @@ export const PANEL_CAPABILITIES: Record<ToolPanelType, PanelCapabilities> = {
     canConsume: [],
     requiresProcess: true,
     singleton: true,                 // Only one lazygit per session
+    canAppearInProjects: true,
+    canAppearInWorktrees: true
+  },
+  browser: {
+    canEmit: [],
+    canConsume: [],
+    requiresProcess: false, // It's a view, not a separate OS process
+    singleton: false,
     canAppearInProjects: true,
     canAppearInWorktrees: true
   }
