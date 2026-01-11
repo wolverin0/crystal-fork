@@ -7,7 +7,7 @@ export interface ToolPanel {
   metadata: ToolPanelMetadata;   // Creation time, position, etc.
 }
 
-export type ToolPanelType = 'terminal' | 'claude' | 'codex' | 'diff' | 'editor' | 'logs' | 'dashboard' | 'setup-tasks'; // Will expand later
+export type ToolPanelType = 'terminal' | 'claude' | 'codex' | 'lazygit' | 'diff' | 'editor' | 'logs' | 'dashboard' | 'setup-tasks'; // Will expand later
 
 export interface ToolPanelState {
   isActive: boolean;
@@ -299,5 +299,13 @@ export const PANEL_CAPABILITIES: Record<ToolPanelType, PanelCapabilities> = {
     permanent: true,                 // Cannot be closed (like dashboard)
     canAppearInProjects: true,       // Setup tasks ONLY in projects
     canAppearInWorktrees: false      // Setup tasks NOT in worktrees
+  },
+  lazygit: {
+    canEmit: ['files:changed'],      // Git operations change files
+    canConsume: [],
+    requiresProcess: true,
+    singleton: true,                 // Only one lazygit per session
+    canAppearInProjects: true,
+    canAppearInWorktrees: true
   }
 };

@@ -3,6 +3,7 @@ import type { ConfigManager } from './configManager';
 import type { SessionManager } from './sessionManager';
 import { AbstractCliManager } from './panels/cli/AbstractCliManager';
 import { ClaudeCodeManager } from './panels/claude/claudeCodeManager';
+import { LazygitManager } from './panels/lazygit/lazygitManager';
 import { 
   CliToolRegistry, 
   CliToolDefinition, 
@@ -154,6 +155,7 @@ export class CliManagerFactory {
   private registerBuiltInTools(): void {
     // Register Claude Code
     this.registerClaudeTool();
+    this.registerLazygitTool();
     
     // Future tools can be registered here:
     // this.registerAiderTool();
@@ -161,6 +163,50 @@ export class CliManagerFactory {
     // this.registerCursorTool();
     
     this.logger?.info('[CliManagerFactory] Registered built-in CLI tools');
+  }
+
+  private registerLazygitTool(): void {
+    const lazygitManagerFactory: ManagerFactoryFunction = (
+      sessionManager: unknown,
+      logger?: Logger,
+      configManager?: ConfigManager
+    ) => {
+      return new LazygitManager(
+        sessionManager as SessionManager,
+        logger,
+        configManager
+      );
+    };
+
+    const lazygitDefinition: CliToolDefinition = {
+      id: 'lazygit',
+      name: 'Lazygit',
+      description: 'Simple terminal UI for git commands',
+      version: '1.0.0',
+      capabilities: {
+        supportsResume: false,
+        supportsMultipleModels: false,
+        supportsPermissions: false,
+        supportsFileOperations: false,
+        supportsGitIntegration: true,
+        supportsSystemPrompts: false,
+        supportsStructuredOutput: false,
+        outputFormats: [CLI_OUTPUT_FORMATS.TEXT],
+        supportedPanelTypes: ['lazygit']
+      },
+      config: {
+        requiredEnvVars: [],
+        optionalEnvVars: [],
+        requiredConfigKeys: [],
+        optionalConfigKeys: ['lazygitExecutablePath'],
+        defaultExecutable: 'lazygit',
+        alternativeExecutables: [],
+        minimumVersion: undefined
+      },
+      managerFactory: lazygitManagerFactory
+    };
+
+    this.registry.registerTool(lazygitDefinition);
   }
 
   /**
