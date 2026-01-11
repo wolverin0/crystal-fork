@@ -1,5 +1,5 @@
 import { AbstractCliManager } from '../cli/AbstractCliManager';
-import type { ConversationMessage } from '../../../../database/models';
+import type { ConversationMessage } from '../../../database/models';
 import * as path from 'path';
 
 export class LazygitManager extends AbstractCliManager {

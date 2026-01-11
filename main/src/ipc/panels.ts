@@ -4,9 +4,21 @@ import { terminalPanelManager } from '../services/terminalPanelManager';
 import { databaseService } from '../services/database';
 import { CreatePanelRequest, PanelEventType, ToolPanel, BaseAIPanelState } from '../../../shared/types/panels';
 import type { AppServices } from './types';
+import { getCliManagerFactory } from '../services/cliManagerFactory';
 
 export function registerPanelHandlers(ipcMain: IpcMain, services: AppServices) {
   // Panel CRUD operations
+  ipcMain.handle('panels:check-tool-availability', async (_, toolId: string) => {
+    try {
+      const factory = getCliManagerFactory();
+      const available = await factory.isToolAvailable(toolId);
+      return { success: true, available };
+    } catch (error) {
+      console.error('[IPC] Failed to check tool availability:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
   ipcMain.handle('panels:create', async (_, request: CreatePanelRequest) => {
     try {
       const panel = await panelManager.createPanel(request);
@@ -154,6 +166,13 @@ export function registerPanelHandlers(ipcMain: IpcMain, services: AppServices) {
     if (panel.type === 'terminal') {
       const cwd = options?.cwd || process.cwd();
       await terminalPanelManager.initializeTerminal(panel, cwd);
+    } else if (panel.type === 'lazygit') {
+      const cwd = options?.cwd || process.cwd();
+      const factory = getCliManagerFactory();
+      const lazygitManager = factory.getManager('lazygit');
+      if (lazygitManager) {
+        await lazygitManager.startPanel(panel.id, panel.sessionId, cwd, '');
+      }
     }
     
     return true;
@@ -167,6 +186,12 @@ export function registerPanelHandlers(ipcMain: IpcMain, services: AppServices) {
       return terminalPanelManager.isTerminalInitialized(panelId);
     }
     
+    if (panel.type === 'lazygit') {
+      const factory = getCliManagerFactory();
+      const lazygitManager = factory.getManager('lazygit');
+      return lazygitManager?.isPanelRunning(panelId) || false;
+    }
+
     if (panel.type === 'diff') {
       // Diff panels don't have background processes, so they're always "initialized"
       return true;

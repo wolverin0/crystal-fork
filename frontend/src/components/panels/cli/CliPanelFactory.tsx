@@ -80,6 +80,7 @@ LoadingFallback.displayName = 'CliLoadingFallback';
 // Lazy-loaded CLI panel components
 const ClaudePanel = lazy(() => import('../claude/ClaudePanel'));
 const CodexPanel = lazy(() => import('../codex/CodexPanel'));
+const LazygitPanel = lazy(() => import('../lazygit/LazygitPanel'));
 
 /**
  * Factory component that dynamically renders the appropriate CLI panel
@@ -92,6 +93,7 @@ export const CliPanelFactory: React.FC<CliPanelFactoryProps> = React.memo(({ pan
   const cliToolId = useMemo(() => {
     if (panel.type === 'claude') return 'claude';
     if (panel.type === 'codex') return 'codex';
+    if (panel.type === 'lazygit') return 'lazygit';
     
     // For future CLI panels, extract from panel data
     const cliPanel = panel as CliPanel;
@@ -109,15 +111,19 @@ export const CliPanelFactory: React.FC<CliPanelFactoryProps> = React.memo(({ pan
         );
       
       case 'codex':
-        return (
-          <Suspense fallback={<LoadingFallback cliToolId={cliToolId} />}>
-            <CodexPanel panel={panel} isActive={isActive} />
-          </Suspense>
-        );
-      
-      default:
-        // For any unrecognized panel type, show unsupported message
-        return (
+      return (
+        <Suspense fallback={<LoadingFallback cliToolId={cliToolId} />}>
+          <CodexPanel panel={panel} isActive={isActive} />
+        </Suspense>
+      );
+    case 'lazygit':
+      return (
+        <Suspense fallback={<LoadingFallback cliToolId={cliToolId} />}>
+          <LazygitPanel panel={panel} isActive={isActive} />
+        </Suspense>
+      );
+    default:
+      return (
           <div className="h-full w-full flex items-center justify-center p-8">
             <div className="text-center max-w-md">
               <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
@@ -147,7 +153,7 @@ CliPanelFactory.displayName = 'CliPanelFactory';
  */
 export const useCliToolSupport = (cliToolId: string) => {
   return useMemo(() => {
-    const supportedTools = ['claude', 'codex'];
+    const supportedTools = ['claude', 'codex', 'lazygit'];
     
     return {
       isSupported: supportedTools.includes(cliToolId),
