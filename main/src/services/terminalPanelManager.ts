@@ -7,6 +7,7 @@ import * as path from 'path';
 import { getShellPath } from '../utils/shellPath';
 import { ShellDetector } from '../utils/shellDetector';
 import type { AnalyticsManager } from './analyticsManager';
+import { DirenvService } from './env/direnvService';
 
 interface TerminalProcess {
   pty: pty.IPty;
@@ -39,6 +40,10 @@ export class TerminalPanelManager {
     const isLinux = process.platform === 'linux';
     const enhancedPath = isLinux ? (process.env.PATH || '') : getShellPath();
     
+    // Load local environment variables (direnv/dotenv)
+    const direnvService = new DirenvService();
+    const localEnv = await direnvService.loadEnv(cwd);
+
     // Create PTY process with enhanced environment
     const ptyProcess = pty.spawn(shellInfo.path, shellInfo.args || [], {
       name: 'xterm-color',
@@ -53,7 +58,8 @@ export class TerminalPanelManager {
         LANG: process.env.LANG || 'en_US.UTF-8',
         WORKTREE_PATH: cwd,
         CRYSTAL_SESSION_ID: panel.sessionId,
-        CRYSTAL_PANEL_ID: panel.id
+        CRYSTAL_PANEL_ID: panel.id,
+        ...localEnv // Inject local env vars
       }
     });
     
