@@ -623,6 +623,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     scanWorktree: (worktreePath: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('security:scan-worktree', worktreePath),
   },
 
+  // Testing operations
+  testing: {
+    getStatus: (): Promise<IPCResponse<{ available: boolean; version?: string }>> => ipcRenderer.invoke('testing:get-status'),
+    startWatcher: (sessionId: string, worktreePath: string, testCommand: string): Promise<IPCResponse> => ipcRenderer.invoke('testing:start-watcher', sessionId, worktreePath, testCommand),
+    stopWatcher: (sessionId: string): Promise<IPCResponse> => ipcRenderer.invoke('testing:stop-watcher', sessionId),
+  },
+
   // Browser operations
   browser: {
     attach: (panelId: string, bounds: { x: number; y: number; width: number; height: number }): Promise<IPCResponse> => ipcRenderer.invoke('browser:attach', panelId, bounds),

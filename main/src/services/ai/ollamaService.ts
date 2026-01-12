@@ -27,28 +27,25 @@ export interface OllamaModel {
 }
 
 export class OllamaService {
-  private host: string;
-  private defaultModel: string;
-
   constructor(
     private logger?: Logger,
     private configManager?: ConfigManager
-  ) {
-    this.host = 'http://localhost:11434';
-    this.defaultModel = 'qwen2.5-coder:14b';
-    
-    // Load config overrides if available
-    if (this.configManager) {
-      const config = this.configManager.getConfig();
-      // We'll add these keys to the config type later
-      this.host = (config as any).ollamaHost || this.host;
-      this.defaultModel = (config as any).ollamaModel || this.defaultModel;
-    }
+  ) {}
+
+  private getHost(): string {
+    const config = this.configManager?.getConfig() as any;
+    return config?.ollamaHost || 'http://localhost:11434';
+  }
+
+  private getModel(override?: string): string {
+    if (override) return override;
+    const config = this.configManager?.getConfig() as any;
+    return config?.ollamaModel || 'qwen2.5-coder:14b';
   }
 
   async checkAvailability(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.host}/api/tags`);
+      const response = await fetch(`${this.getHost()}/api/tags`);
       return response.ok;
     } catch (error) {
       return false;
@@ -57,7 +54,7 @@ export class OllamaService {
 
   async listModels(): Promise<OllamaModel[]> {
     try {
-      const response = await fetch(`${this.host}/api/tags`);
+      const response = await fetch(`${this.getHost()}/api/tags`);
       if (!response.ok) return [];
       const data = await response.json();
       return data.models || [];
@@ -68,10 +65,11 @@ export class OllamaService {
   }
 
   async generate(prompt: string, model?: string, system?: string): Promise<OllamaResponse | null> {
-    const targetModel = model || this.defaultModel;
+    const targetModel = this.getModel(model);
+    const host = this.getHost();
     
     try {
-      const response = await fetch(`${this.host}/api/generate`, {
+      const response = await fetch(`${host}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

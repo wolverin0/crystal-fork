@@ -618,6 +618,12 @@ export class SessionManager extends EventEmitter {
       const speechText = `Session error: ${error}`;
       this.piperService.speak(speechText);
     }
+
+    // Crystal Mind Analysis (Worker Bee)
+    const session = this.activeSessions.get(id);
+    if (this.crystalMindService && session) {
+      this.crystalMindService.analyzeError(id, session.worktreePath, error, details);
+    }
   }
 
 
