@@ -45,34 +45,28 @@ We separate the workload into "Stream Processing" (Fast, Local) and "Deep Synthe
 | **Qwen 2.5 Coder 14B** | 14B | Incredible efficiency/performance ratio. | Best balance for background tasks. |
 | **Mistral Small 3** | 22B | Strong reasoning, good instruction following. | Good alternative. |
 
-## 3. Structured Layered Memory (The "Mnexium-Lite" Pattern)
+## 3. Graph Memory (Beads Integration)
 
-We adopt a layered approach to memory, moving from raw logs to curated wisdom, inspired by Mnexium's architecture but keeping it local and file-based.
+We adopt **Beads**, a distributed, git-backed graph issue tracker, as our long-term memory store. This replaces flat text files with a structured, queryable database.
 
-### Layer 1: The Raw Stream (`MEMORIES.jsonl`)
-A high-volume, append-only log of every detected event. **Write-Only** by the Worker Bee.
-```json
-{"timestamp": "2026-01-11T10:00:00Z", "type": "error", "severity": "high", "location": "src/api.ts", "content": "Security leak detected", "context": "AWS Key"}
-{"timestamp": "2026-01-11T10:05:00Z", "type": "correction", "severity": "medium", "location": "package.json", "content": "User corrected dependency version", "context": "react@19"}
-```
+### The Data Structure
+*   **Storage:** JSONL files in `.beads/graph/` (synced via Git).
+*   **Cache:** Local SQLite DB for fast querying (`.beads/cache.db`).
+*   **Format:** A graph of "Beads" (Tasks/Events/Facts) with dependencies.
 
-### Layer 2: The Curated Knowledge (`PROJECT_KNOWLEDGE.md`)
-A concise, human-readable rulebook managed by **The Architect**.
-*   **Trigger:** The Architect runs (daily/weekly), reads Layer 1, consolidates patterns, and updates this file.
-*   **Usage:** This file is **Read-Only** by the Active Session (injected into System Prompt).
-*   **Content:**
-    *   "Project Rules: Always use `pnpm`."
-    *   "Architecture: `SessionManager` handles db access, not `ipc/session`."
-    *   "Pitfalls: Avoid `date-fns`, use `dayjs`."
+### Integration Workflow
+1.  **Worker Bee (Input):**
+    *   Detects error -> Creates a new Bead: `bd task add "Fix failure in test.ts" --tag "auto-detected"`.
+2.  **Architect (Management):**
+    *   Queries completed beads -> Summarizes them -> Creates "Policy Beads" (Rules).
+    *   Performs "Memory Decay" by archiving old/resolved beads to keep the graph clean.
+3.  **Active Session (Context):**
+    *   Queries relevant beads (`bd list --tag "security"`) to inject *targeted* context into the prompt.
+4.  **UI (Dashboard):**
+    *   Visualizes the project graph (Nodes/Edges) in a dedicated panel.
 
 ## 4. Intelligent Tooling (Serena Integration)
-
-To make the "Worker Bee" and the "Active Agent" smarter without bloating context, we integrate **Serena** (an open-source MCP server for LSP/Code Intelligence).
-
-*   **Role:** Provides "IDE Superpowers" to the LLM.
-*   **Capabilities:** `find_symbol`, `find_references`, `get_type_definition`.
-*   **Benefit:** Instead of reading a 500-line file to find a function, the agent asks Serena `find_symbol("createSession")`. This saves tokens and increases accuracy.
-*   **Integration:** Crystal detects `serena` and auto-mounts it as an MCP server for every session.
+... (keep existing Serena section)
 
 ## 5. Implementation Roadmap
 
@@ -80,15 +74,15 @@ To make the "Worker Bee" and the "Active Agent" smarter without bloating context
     *   Basic logging of session events.
     *   Integration of Gitleaks and Watchexec.
 
-2.  **Phase 2: The Worker Bee (Stream Processor)**
-    *   Implement `CrystalMindService`.
-    *   Connect to local Ollama (Qwen 2.5 Coder).
-    *   Parse session turns and write to `MEMORIES.jsonl`.
+2.  **Phase 2: The Worker Bee (Stream Processor) (DONE)**
+    *   Ollama integration (`OllamaService`).
+    *   Basic error analysis logic.
 
-3.  **Phase 3: The Architect (Batch Processor)**
-    *   Create the "Rethink" workflow that reads `MEMORIES.jsonl`.
-    *   Uses DeepSeek R1 to generate `PROJECT_KNOWLEDGE.md`.
+3.  **Phase 3: The Graph Memory (Beads)**
+    *   **Install:** Auto-install `bd` binary.
+    *   **Backend:** Create `BeadsService` to wrap the CLI and read the SQLite cache.
+    *   **Migration:** Update `CrystalMindService` to write to Beads instead of `MEMORIES.md`.
+    *   **Frontend:** Create `BeadsPanel` for visualization.
 
-4.  **Phase 4: Tooling (Serena)**
-    *   Add `SerenaManager` to Crystal.
-    *   Auto-launch Serena MCP server if installed.
+4.  **Phase 4: The Architect (Batch Processor)**
+    *   Update `ArchitectService` to process the Beads graph.
