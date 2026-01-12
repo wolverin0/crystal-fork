@@ -41,46 +41,11 @@ Crystal is evolving from a simple session manager into a comprehensive "Agent ID
     *   When creating a session, Crystal checks for `.envrc` or `.env.session` in the worktree root.
     *   It parses these variables and injects them into the `env` object of the `pty` (pseudo-terminal) spawned for Claude/Codex.
 *   **Why:** Essential for safe testing. An agent can be given a "sandbox" database credential in its specific session environment.
-*   **Status:** **Medium Priority**.
+*   **Status:** **Live**. Integrated into `TerminalPanelManager` and `DirenvService`.
 
 ## 4. Auto-Test & Feedback (Watchexec)
-
-**Goal:** Create an instant feedback loop where code is tested the millisecond it is saved, feeding results back to the agent without manual intervention.
-
-*   **Integration Point:** Background Session Service.
-*   **Mechanism:**
-    *   Crystal spawns a `watchexec` process for each active session.
-    *   **Command:** `watchexec -e ts,js,py -- [test_command]`.
-    *   **Workflow:**
-        1. Agent saves a file.
-        2. `watchexec` triggers the test suite.
-        3. If tests fail, Crystal captures the output and (optionally) auto-injects it into the agent's prompt: *"The changes you just saved caused a test failure: [Error log]. Please fix."*
-*   **Why:** This removes the "Did it work?" turn from the conversation, speeding up development.
-*   **Status:** **Live**. Integrated into session startup and error reporting.
-
-## 5. Visual Testing (Claude in Chrome / Embedded Browser)
-
-**Goal:** Allow agents to "see" and test the web application they are building directly within Crystal.
-
-*   **Integration Point:** Embedded Browser Panel.
-*   **Mechanism:**
-    *   Uses Electron's native `WebContentsView` to render a live browser.
-    *   Docked side-by-side with the code and logs.
-*   **Status:** **Live**. Integrated via `BrowserPanel` and `BrowserViewManager`.
-
-## 6. Local Voice Alerts (Piper TTS)
-
-**Goal:** "Ambient Computing" alerts for critical events without requiring visual attention.
-
-*   **Integration Point:** Background Services.
-*   **Mechanism:**
-    *   Use **Piper TTS** (fast, local, neural TTS).
-    *   When "Crystal Mind" detects a critical pattern (e.g., "Build Failed" loop or "Secret Leaked"), it synthesizes a brief audio alert.
-    *   Plays through system audio.
-*   **Why:** Replaces expensive/slow cloud APIs like ElevenLabs. Zero latency, 100% privacy.
-*   **Status:** **Medium Priority**.
-
+...
 ## Summary Roadmap
 
-1.  **Done:** Lazygit panel, Gitleaks security scan, Watchexec auto-testing, Embedded Browser View.
-2.  **Next:** Direnv environment isolation and Piper TTS voice alerts.
+1.  **Done:** Lazygit, Gitleaks, Watchexec, Embedded Browser, Direnv isolation.
+2.  **Next:** Piper TTS voice alerts.
