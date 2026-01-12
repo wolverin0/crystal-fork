@@ -24,6 +24,7 @@ import type { BrowserViewManager } from '../services/browser/browserViewManager'
 import type { PiperService } from '../services/voice/piperService';
 import type { OllamaService } from '../services/ai/ollamaService';
 import type { CrystalMindService } from '../services/ai/crystalMindService';
+import type { ArchitectService } from '../services/ai/architectService';
 
 export interface AppServices {
   app: App;
@@ -52,5 +53,6 @@ export interface AppServices {
   piperService: PiperService;
   ollamaService: OllamaService;
   crystalMindService: CrystalMindService;
+  architectService: ArchitectService;
 } 
  

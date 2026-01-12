@@ -632,6 +632,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     goForward: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:go-forward', panelId),
     reload: (panelId: string): Promise<IPCResponse> => ipcRenderer.invoke('browser:reload', panelId),
   },
+
+  // AI operations
+  ai: {
+    rethinkProject: (worktreePath: string): Promise<IPCResponse> => ipcRenderer.invoke('ai:rethink-project', worktreePath),
+    getOllamaStatus: (): Promise<{ success: boolean; available: boolean }> => ipcRenderer.invoke('ai:get-ollama-status'),
+  },
 });
 
 // Expose electron event listeners and utilities for permission requests

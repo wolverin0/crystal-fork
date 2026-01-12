@@ -649,6 +649,18 @@ export class API {
       return window.electronAPI.browser.reload(panelId);
     },
   };
+
+  // AI operations
+  static ai = {
+    async rethinkProject(worktreePath: string) {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.ai.rethinkProject(worktreePath);
+    },
+    async getOllamaStatus() {
+      if (!isElectron()) throw new Error('Electron API not available');
+      return window.electronAPI.ai.getOllamaStatus();
+    },
+  };
 }
 
 // Legacy support - removed as migration is complete

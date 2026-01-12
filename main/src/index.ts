@@ -32,6 +32,7 @@ import { BrowserViewManager } from './services/browser/browserViewManager';
 import { PiperService } from './services/voice/piperService';
 import { OllamaService } from './services/ai/ollamaService';
 import { CrystalMindService } from './services/ai/crystalMindService';
+import { ArchitectService } from './services/ai/architectService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -98,6 +99,7 @@ let browserViewManager: BrowserViewManager;
 let piperService: PiperService;
 let ollamaService: OllamaService;
 let crystalMindService: CrystalMindService;
+let architectService: ArchitectService;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -574,6 +576,7 @@ async function initializeServices() {
   // We don't await availability here to not block startup if Ollama isn't running
   
   crystalMindService = new CrystalMindService(ollamaService, configManager, logger);
+  architectService = new ArchitectService(ollamaService, configManager, logger);
 
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
@@ -678,6 +681,7 @@ async function initializeServices() {
     piperService,
     ollamaService,
     crystalMindService,
+    architectService,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

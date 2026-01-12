@@ -385,6 +385,12 @@ interface ElectronAPI {
     goForward: (panelId: string) => Promise<IPCResponse>;
     reload: (panelId: string) => Promise<IPCResponse>;
   };
+
+  // AI operations (Crystal Mind)
+  ai: {
+    rethinkProject: (worktreePath: string) => Promise<IPCResponse>;
+    getOllamaStatus: () => Promise<{ success: boolean; available: boolean }>;
+  };
 }
 
 // Additional electron interface for IPC event listeners

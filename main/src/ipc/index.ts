@@ -25,6 +25,7 @@ import { registerAnalyticsHandlers } from './analytics';
 import { registerSecurityHandlers } from './security';
 import { registerTestingHandlers } from './testing';
 import { registerBrowserHandlers } from './browser';
+import { registerAiHandlers } from './ai';
 
 
 export function registerIpcHandlers(services: AppServices): void {
@@ -53,5 +54,6 @@ export function registerIpcHandlers(services: AppServices): void {
   registerSecurityHandlers(ipcMain, services);
   registerTestingHandlers(ipcMain, services);
   registerBrowserHandlers(ipcMain, services);
+  registerAiHandlers(ipcMain, services);
 } 
  

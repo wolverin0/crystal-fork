@@ -45,41 +45,50 @@ We separate the workload into "Stream Processing" (Fast, Local) and "Deep Synthe
 | **Qwen 2.5 Coder 14B** | 14B | Incredible efficiency/performance ratio. | Best balance for background tasks. |
 | **Mistral Small 3** | 22B | Strong reasoning, good instruction following. | Good alternative. |
 
-## 3. Data Structure: `MEMORIES.md` (The Write-Only Sink)
+## 3. Structured Layered Memory (The "Mnexium-Lite" Pattern)
 
-This file sits in the project root (or `.claude/`). It is **never** read by the active session, preserving context window.
+We adopt a layered approach to memory, moving from raw logs to curated wisdom, inspired by Mnexium's architecture but keeping it local and file-based.
 
-```markdown
-# Crystal Memories (Write-Only Log)
-> This file is a raw log of detected issues. It is analyzed by the "Architect" process, not the active session.
-
-- [2026-01-11T10:00:00] [ERROR] [src/components/Header.tsx] User corrected: "Use 'lucide-react' imports, not '@heroicons/react'."
-- [2026-01-11T10:05:00] [ISSUE] [package.json] Dependency conflict: "react" v19 vs "react-dom" v18.
-- [2026-01-11T10:15:00] [TASK] [Refactor] User requested: "Split the huge SessionManager class."
+### Layer 1: The Raw Stream (`MEMORIES.jsonl`)
+A high-volume, append-only log of every detected event. **Write-Only** by the Worker Bee.
+```json
+{"timestamp": "2026-01-11T10:00:00Z", "type": "error", "severity": "high", "location": "src/api.ts", "content": "Security leak detected", "context": "AWS Key"}
+{"timestamp": "2026-01-11T10:05:00Z", "type": "correction", "severity": "medium", "location": "package.json", "content": "User corrected dependency version", "context": "react@19"}
 ```
 
-## 4. Agent Interoperability (Future Proofing)
+### Layer 2: The Curated Knowledge (`PROJECT_KNOWLEDGE.md`)
+A concise, human-readable rulebook managed by **The Architect**.
+*   **Trigger:** The Architect runs (daily/weekly), reads Layer 1, consolidates patterns, and updates this file.
+*   **Usage:** This file is **Read-Only** by the Active Session (injected into System Prompt).
+*   **Content:**
+    *   "Project Rules: Always use `pnpm`."
+    *   "Architecture: `SessionManager` handles db access, not `ipc/session`."
+    *   "Pitfalls: Avoid `date-fns`, use `dayjs`."
 
-Leveraging **Google A2A** and **Gemini File Search**:
+## 4. Intelligent Tooling (Serena Integration)
 
-*   **A2A Protocol:** We can expose the "Worker Bee" as an A2A agent. This allows other tools (or even other Crystal instances) to query it: "What are the common errors in this repo?"
-*   **File Search (RAG):** instead of feeding raw files to the Architect, we upload the repo to Gemini's File Search API. The Architect then *queries* the codebase: "Show me all files that import `date-fns`." This handles massive context windows cheaply and effectively.
+To make the "Worker Bee" and the "Active Agent" smarter without bloating context, we integrate **Serena** (an open-source MCP server for LSP/Code Intelligence).
+
+*   **Role:** Provides "IDE Superpowers" to the LLM.
+*   **Capabilities:** `find_symbol`, `find_references`, `get_type_definition`.
+*   **Benefit:** Instead of reading a 500-line file to find a function, the agent asks Serena `find_symbol("createSession")`. This saves tokens and increases accuracy.
+*   **Integration:** Crystal detects `serena` and auto-mounts it as an MCP server for every session.
 
 ## 5. Implementation Roadmap
 
-1.  **Phase 1: The Logger**
-    *   Create a watcher for `~/.claude/sessions`.
-    *   Parse the JSONL.
-    *   Extract the last turn.
-    *   Log to a local JSON file (no LLM yet).
+1.  **Phase 1: The Logger (DONE)**
+    *   Basic logging of session events.
+    *   Integration of Gitleaks and Watchexec.
 
-2.  **Phase 2: The Worker Bee**
-    *   Connect to local Ollama instance.
-    *   Send the last turn to `qwen2.5-coder:14b`.
-    *   Prompt: "Analyze this interaction. Did the user correct the AI? If so, what was the mistake?"
-    *   Append result to `MEMORIES.md`.
+2.  **Phase 2: The Worker Bee (Stream Processor)**
+    *   Implement `CrystalMindService`.
+    *   Connect to local Ollama (Qwen 2.5 Coder).
+    *   Parse session turns and write to `MEMORIES.jsonl`.
 
-3.  **Phase 3: The Architect**
-    *   Create the "Rethink" workflow that reads `MEMORIES.md`.
-    *   Uses DeepSeek R1 to summarize and suggest actions.
-    *   Clears `MEMORIES.md` after processing.
+3.  **Phase 3: The Architect (Batch Processor)**
+    *   Create the "Rethink" workflow that reads `MEMORIES.jsonl`.
+    *   Uses DeepSeek R1 to generate `PROJECT_KNOWLEDGE.md`.
+
+4.  **Phase 4: Tooling (Serena)**
+    *   Add `SerenaManager` to Crystal.
+    *   Auto-launch Serena MCP server if installed.
