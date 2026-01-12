@@ -78,6 +78,9 @@ export interface AppConfig {
     posthogHost?: string;
     distinctId?: string; // Random UUID for anonymous user identification
   };
+  // Ollama settings
+  ollamaHost?: string;
+  ollamaModel?: string;
 }
 
 export interface UpdateConfigRequest {
@@ -145,4 +148,6 @@ export interface UpdateConfigRequest {
     posthogHost?: string;
     distinctId?: string; // Random UUID for anonymous user identification
   };
+  ollamaHost?: string;
+  ollamaModel?: string;
 }

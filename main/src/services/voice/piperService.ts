@@ -81,7 +81,7 @@ export class PiperService {
       player.on('error', (err) => this.logger?.error('Audio player error:', err));
 
     } catch (error) {
-      this.logger?.error('Failed to speak text:', error);
+      this.logger?.error('Failed to speak text:', error as Error);
     }
   }
 }

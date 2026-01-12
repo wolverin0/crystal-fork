@@ -30,6 +30,8 @@ import { GitleaksService } from './services/security/gitleaksService';
 import { WatchexecService } from './services/testing/watchexecService';
 import { BrowserViewManager } from './services/browser/browserViewManager';
 import { PiperService } from './services/voice/piperService';
+import { OllamaService } from './services/ai/ollamaService';
+import { CrystalMindService } from './services/ai/crystalMindService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -94,6 +96,8 @@ let gitleaksService: GitleaksService;
 let watchexecService: WatchexecService;
 let browserViewManager: BrowserViewManager;
 let piperService: PiperService;
+let ollamaService: OllamaService;
+let crystalMindService: CrystalMindService;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -566,11 +570,16 @@ async function initializeServices() {
   piperService = new PiperService(logger);
   await piperService.checkAvailability();
 
+  ollamaService = new OllamaService(logger, configManager);
+  // We don't await availability here to not block startup if Ollama isn't running
+  
+  crystalMindService = new CrystalMindService(ollamaService, configManager, logger);
+
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
   logsManager.setAnalyticsManager(analyticsManager);
 
-  sessionManager = new SessionManager(databaseService, analyticsManager, logger, gitleaksService, watchexecService, piperService);
+  sessionManager = new SessionManager(databaseService, analyticsManager, logger, gitleaksService, watchexecService, piperService, crystalMindService);
   sessionManager.initializeFromDatabase();
 
   archiveProgressManager = new ArchiveProgressManager();
@@ -667,6 +676,8 @@ async function initializeServices() {
     watchexecService,
     browserViewManager,
     piperService,
+    ollamaService,
+    crystalMindService,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

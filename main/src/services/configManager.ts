@@ -69,7 +69,9 @@ export class ConfigManager extends EventEmitter {
         enabled: false, // Opt-in: disabled by default until user consents
         posthogApiKey: 'phc_uwOqT2KUa4C9Qx5WbEPwQSN9mUCoSGFg1aY0b670ft5',
         posthogHost: 'https://us.i.posthog.com'
-      }
+      },
+      ollamaHost: 'http://localhost:11434',
+      ollamaModel: 'qwen2.5-coder:14b'
     };
   }
 

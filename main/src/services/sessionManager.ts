@@ -49,6 +49,7 @@ import type { Logger } from '../utils/logger';
 import { GitleaksService } from './security/gitleaksService';
 import { WatchexecService } from './testing/watchexecService';
 import { PiperService } from './voice/piperService';
+import { CrystalMindService } from './ai/crystalMindService';
 
 export class SessionManager extends EventEmitter {
   private activeSessions: Map<string, Session> = new Map();
@@ -61,6 +62,7 @@ export class SessionManager extends EventEmitter {
   private gitleaksService?: GitleaksService;
   private watchexecService?: WatchexecService;
   private piperService?: PiperService;
+  private crystalMindService?: CrystalMindService;
 
   constructor(
     public db: DatabaseService, 
@@ -68,7 +70,8 @@ export class SessionManager extends EventEmitter {
     private logger?: Logger,
     gitleaksService?: GitleaksService,
     watchexecService?: WatchexecService,
-    piperService?: PiperService
+    piperService?: PiperService,
+    crystalMindService?: CrystalMindService
   ) {
     super();
     // Increase max listeners to prevent warnings when many components listen to events
@@ -79,6 +82,7 @@ export class SessionManager extends EventEmitter {
     this.gitleaksService = gitleaksService;
     this.watchexecService = watchexecService;
     this.piperService = piperService;
+    this.crystalMindService = crystalMindService;
 
     // Listen to test watcher output
     if (this.watchexecService) {
@@ -1691,6 +1695,15 @@ export class SessionManager extends EventEmitter {
     // Stop all test watchers
     if (this.watchexecService) {
       this.watchexecService.stopAll();
+    }
+
+    // Stop all active sessions
+    for (const [id, session] of this.activeSessions) {
+      try {
+        await this.stopSession(id);
+      } catch (error) {
+        this.logger?.error(`Error stopping session ${id} during cleanup:`, error as Error);
+      }
     }
 
     this.stopRunningScript();

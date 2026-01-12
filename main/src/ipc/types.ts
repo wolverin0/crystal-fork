@@ -22,6 +22,8 @@ import type { GitleaksService } from '../services/security/gitleaksService';
 import type { WatchexecService } from '../services/testing/watchexecService';
 import type { BrowserViewManager } from '../services/browser/browserViewManager';
 import type { PiperService } from '../services/voice/piperService';
+import type { OllamaService } from '../services/ai/ollamaService';
+import type { CrystalMindService } from '../services/ai/crystalMindService';
 
 export interface AppServices {
   app: App;
@@ -48,5 +50,7 @@ export interface AppServices {
   watchexecService: WatchexecService;
   browserViewManager: BrowserViewManager;
   piperService: PiperService;
+  ollamaService: OllamaService;
+  crystalMindService: CrystalMindService;
 } 
  
