@@ -29,6 +29,7 @@ import { TelegramService } from './services/telegramService';
 import { GitleaksService } from './services/security/gitleaksService';
 import { WatchexecService } from './services/testing/watchexecService';
 import { BrowserViewManager } from './services/browser/browserViewManager';
+import { PiperService } from './services/voice/piperService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -92,6 +93,7 @@ let analyticsManager: AnalyticsManager;
 let gitleaksService: GitleaksService;
 let watchexecService: WatchexecService;
 let browserViewManager: BrowserViewManager;
+let piperService: PiperService;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -561,11 +563,14 @@ async function initializeServices() {
 
   browserViewManager = new BrowserViewManager(logger);
 
+  piperService = new PiperService(logger);
+  await piperService.checkAvailability();
+
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
   logsManager.setAnalyticsManager(analyticsManager);
 
-  sessionManager = new SessionManager(databaseService, analyticsManager, logger, gitleaksService, watchexecService);
+  sessionManager = new SessionManager(databaseService, analyticsManager, logger, gitleaksService, watchexecService, piperService);
   sessionManager.initializeFromDatabase();
 
   archiveProgressManager = new ArchiveProgressManager();
@@ -661,6 +666,7 @@ async function initializeServices() {
     gitleaksService,
     watchexecService,
     browserViewManager,
+    piperService,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

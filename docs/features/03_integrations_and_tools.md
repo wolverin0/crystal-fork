@@ -45,7 +45,9 @@ Crystal is evolving from a simple session manager into a comprehensive "Agent ID
 
 ## 4. Auto-Test & Feedback (Watchexec)
 ...
+*   **Why:** Replaces expensive/slow cloud APIs like ElevenLabs. Zero latency, 100% privacy.
+*   **Status:** **Live**. Integrated into `SessionManager` error handling.
+
 ## Summary Roadmap
 
-1.  **Done:** Lazygit, Gitleaks, Watchexec, Embedded Browser, Direnv isolation.
-2.  **Next:** Piper TTS voice alerts.
+1.  **Completed:** Lazygit, Gitleaks, Watchexec, Embedded Browser, Direnv, Piper TTS.

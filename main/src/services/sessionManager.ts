@@ -48,6 +48,7 @@ import type { AnalyticsManager } from './analyticsManager';
 import type { Logger } from '../utils/logger';
 import { GitleaksService } from './security/gitleaksService';
 import { WatchexecService } from './testing/watchexecService';
+import { PiperService } from './voice/piperService';
 
 export class SessionManager extends EventEmitter {
   private activeSessions: Map<string, Session> = new Map();
@@ -59,13 +60,15 @@ export class SessionManager extends EventEmitter {
   private analyticsManager: AnalyticsManager | null = null;
   private gitleaksService?: GitleaksService;
   private watchexecService?: WatchexecService;
+  private piperService?: PiperService;
 
   constructor(
     public db: DatabaseService, 
     analyticsManager?: AnalyticsManager,
     private logger?: Logger,
     gitleaksService?: GitleaksService,
-    watchexecService?: WatchexecService
+    watchexecService?: WatchexecService,
+    piperService?: PiperService
   ) {
     super();
     // Increase max listeners to prevent warnings when many components listen to events
@@ -75,6 +78,7 @@ export class SessionManager extends EventEmitter {
     this.terminalSessionManager = new TerminalSessionManager();
     this.gitleaksService = gitleaksService;
     this.watchexecService = watchexecService;
+    this.piperService = piperService;
 
     // Listen to test watcher output
     if (this.watchexecService) {
@@ -603,6 +607,13 @@ export class SessionManager extends EventEmitter {
     
     // Mark the session as having an error
     this.updateSession(id, { status: 'error', error: error });
+
+    // Audio Alert (Ambient Computing)
+    if (this.piperService) {
+      // Speak the error summary (first sentence usually)
+      const speechText = `Session error: ${error}`;
+      this.piperService.speak(speechText);
+    }
   }
 
 

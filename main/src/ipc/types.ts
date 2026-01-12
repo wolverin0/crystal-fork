@@ -21,6 +21,7 @@ import type { AnalyticsManager } from '../services/analyticsManager';
 import type { GitleaksService } from '../services/security/gitleaksService';
 import type { WatchexecService } from '../services/testing/watchexecService';
 import type { BrowserViewManager } from '../services/browser/browserViewManager';
+import type { PiperService } from '../services/voice/piperService';
 
 export interface AppServices {
   app: App;
@@ -46,5 +47,6 @@ export interface AppServices {
   gitleaksService: GitleaksService;
   watchexecService: WatchexecService;
   browserViewManager: BrowserViewManager;
+  piperService: PiperService;
 } 
  
