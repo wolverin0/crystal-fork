@@ -139,9 +139,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = React.memo(({ panel, 
             // Check if this is panel terminal output (has panelId) vs session terminal output (has sessionId)
             if (data && typeof data === 'object' && 'panelId' in data && data.panelId && 'output' in data) {
               const typedData = data as { panelId: string; output: string };
-              console.log('[TerminalPanel] Received panel output for:', typedData.panelId, 'Current panel:', panel.id);
               if (typedData.panelId === panel.id && terminal && !disposed) {
-                console.log('[TerminalPanel] Writing to terminal:', typedData.output.substring(0, 50) + '...');
                 terminal.write(typedData.output);
               }
             }
