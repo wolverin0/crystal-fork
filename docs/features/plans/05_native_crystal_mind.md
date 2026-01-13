@@ -12,7 +12,19 @@ Instead of a separate local LLM, we utilize specialized Claude sub-agents invoke
 *   **Worker Bee (Real-time):** Programmatic calls to `claude -p` using the **Haiku 4.5** model for cheap, fast error analysis.
 *   **Architect (Batch):** Programmatic calls to `claude -p` using the **Sonnet/Opus 4.5** model for deep architectural synthesis.
 
-## 2. Implementation: The Memory Manager Sub-Agent
+## 2. Execution Strategy (Windows Bridge)
+**Critical Implementation Detail:**
+Native `claude` execution in WSL currently hangs. We will use a "Windows Bridge" strategy to invoke the host's `claude.exe` which is authenticated and working.
+
+**Command Pattern:**
+```bash
+echo | cmd.exe /c "claude -p 'PROMPT' --agent memory-manager"
+```
+
+**Abstraction:**
+The `ClaudeHeadlessService` will wrap this logic. A configuration flag (`useWindowsBridge`) will allow easy switching back to native Linux execution once the environment issue is resolved.
+
+## 3. Implementation: The Memory Manager Sub-Agent
 **File:** `.claude/agents/memory-manager.md`
 ```markdown
 ---
@@ -61,8 +73,8 @@ Crystal wraps the Claude CLI, allowing us to simulate native hooks for powerful 
 *   **Model Specialization:** Uses fast Haiku for logs and smart Sonnet for architecture.
 *   **Distributed Memory:** Since Beads is Git-backed, the "Mind" syncs across different machines automatically.
 
-## 5. Verification Plan (Pre-Restart Check)
-1.  **Agent Visibility:** Run `claude --help` to ensure `--agent` is recognized. (DONE)
-2.  **Headless Link:** Run `claude -p "test"` to ensure output can be captured programmatically. (PENDING RESTART)
-3.  **Sub-Agent Call:** Run `claude -p "Say hi" --agent memory-manager`. (PENDING RESTART)
-4.  **End-to-End:** Trigger a `watchexec` error and verify a Bead is created.
+## 6. Verification Plan
+1.  **Agent Visibility:** Run `claude --help`. (DONE)
+2.  **Headless Link:** Run `echo | cmd.exe /c "claude -p 'test'"`. (VERIFIED)
+3.  **Sub-Agent Call:** Run `echo | cmd.exe /c "claude -p 'Say hi' --agent memory-manager"`.
+4.  **End-to-End:** Trigger a `watchexec` error and verify a Bead is created via the Windows bridge.
