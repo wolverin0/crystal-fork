@@ -579,15 +579,13 @@ async function initializeServices() {
   ollamaService = new OllamaService(logger, configManager);
   // We don't await availability here to not block startup if Ollama isn't running
   
-  claudeHeadlessService = new ClaudeHeadlessService(logger, configManager);
-  
-  crystalMindService = new CrystalMindService(claudeHeadlessService, beadsService, configManager, logger);
-  architectService = new ArchitectService(ollamaService, configManager, logger);
-
   beadsService = new BeadsService(logger);
   await beadsService.checkAvailability();
 
   claudeHeadlessService = new ClaudeHeadlessService(logger, configManager);
+  
+  crystalMindService = new CrystalMindService(claudeHeadlessService, beadsService, configManager, logger);
+  architectService = new ArchitectService(ollamaService, configManager, logger);
 
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');

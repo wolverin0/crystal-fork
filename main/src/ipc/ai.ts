@@ -1,7 +1,7 @@
 import { IpcMain } from 'electron';
 import type { AppServices } from './types';
 
-export function registerAiHandlers(ipcMain: IpcMain, { architectService, ollamaService }: AppServices): void {
+export function registerAiHandlers(ipcMain: IpcMain, { architectService, ollamaService, beadsService }: AppServices): void {
   ipcMain.handle('ai:rethink-project', async (_event, worktreePath: string) => {
     try {
       await architectService.rethinkProject(worktreePath);
@@ -14,5 +14,9 @@ export function registerAiHandlers(ipcMain: IpcMain, { architectService, ollamaS
 
   ipcMain.handle('ai:get-ollama-status', async () => {
     return { success: true, available: await ollamaService.checkAvailability() };
+  });
+
+  ipcMain.handle('beads:check-availability', async () => {
+    return await beadsService.checkAvailability();
   });
 }

@@ -25,7 +25,7 @@ export class BeadsService {
       this.isAvailable = false;
       return { 
         available: false, 
-        error: 'Beads (bd) not found in PATH. Please install via "npm install -g @beads/bd" or see https://github.com/steveyegge/beads' 
+        error: 'Beads (bd) not found in PATH.' 
       };
     }
   }
