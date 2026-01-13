@@ -33,6 +33,8 @@ import { PiperService } from './services/voice/piperService';
 import { OllamaService } from './services/ai/ollamaService';
 import { CrystalMindService } from './services/ai/crystalMindService';
 import { ArchitectService } from './services/ai/architectService';
+import { BeadsService } from './services/beads/beadsService';
+import { ClaudeHeadlessService } from './services/ai/claudeHeadlessService';
 import { Logger } from './utils/logger';
 import { ArchiveProgressManager } from './services/archiveProgressManager';
 import { AnalyticsManager } from './services/analyticsManager';
@@ -100,6 +102,8 @@ let piperService: PiperService;
 let ollamaService: OllamaService;
 let crystalMindService: CrystalMindService;
 let architectService: ArchitectService;
+let beadsService: BeadsService;
+let claudeHeadlessService: ClaudeHeadlessService;
 
 // Store app start time for session duration tracking
 let appStartTime: number;
@@ -575,8 +579,15 @@ async function initializeServices() {
   ollamaService = new OllamaService(logger, configManager);
   // We don't await availability here to not block startup if Ollama isn't running
   
-  crystalMindService = new CrystalMindService(ollamaService, configManager, logger);
+  claudeHeadlessService = new ClaudeHeadlessService(logger, configManager);
+  
+  crystalMindService = new CrystalMindService(claudeHeadlessService, beadsService, configManager, logger);
   architectService = new ArchitectService(ollamaService, configManager, logger);
+
+  beadsService = new BeadsService(logger);
+  await beadsService.checkAvailability();
+
+  claudeHeadlessService = new ClaudeHeadlessService(logger, configManager);
 
   // Set analytics manager on logsManager for script execution tracking
   const { logsManager } = await import('./services/panels/logPanel/logsManager');
@@ -682,6 +693,8 @@ async function initializeServices() {
     ollamaService,
     crystalMindService,
     architectService,
+    beadsService,
+    claudeHeadlessService,
   };
 
   // Initialize IPC handlers first so managers (like ClaudePanelManager) are ready

@@ -71,7 +71,8 @@ export class ConfigManager extends EventEmitter {
         posthogHost: 'https://us.i.posthog.com'
       },
       ollamaHost: 'http://localhost:11434',
-      ollamaModel: 'qwen2.5-coder:14b'
+      ollamaModel: 'qwen2.5-coder:14b',
+      useWindowsBridge: true
     };
   }
 

@@ -25,6 +25,8 @@ import type { PiperService } from '../services/voice/piperService';
 import type { OllamaService } from '../services/ai/ollamaService';
 import type { CrystalMindService } from '../services/ai/crystalMindService';
 import type { ArchitectService } from '../services/ai/architectService';
+import type { BeadsService } from '../services/beads/beadsService';
+import type { ClaudeHeadlessService } from '../services/ai/claudeHeadlessService';
 
 export interface AppServices {
   app: App;
@@ -54,5 +56,7 @@ export interface AppServices {
   ollamaService: OllamaService;
   crystalMindService: CrystalMindService;
   architectService: ArchitectService;
+  beadsService: BeadsService;
+  claudeHeadlessService: ClaudeHeadlessService;
 } 
  

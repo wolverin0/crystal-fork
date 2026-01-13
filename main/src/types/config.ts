@@ -81,6 +81,8 @@ export interface AppConfig {
   // Ollama settings
   ollamaHost?: string;
   ollamaModel?: string;
+  // Execution settings
+  useWindowsBridge?: boolean;
 }
 
 export interface UpdateConfigRequest {
@@ -150,4 +152,5 @@ export interface UpdateConfigRequest {
   };
   ollamaHost?: string;
   ollamaModel?: string;
+  useWindowsBridge?: boolean;
 }
