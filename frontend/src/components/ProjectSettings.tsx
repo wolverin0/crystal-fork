@@ -14,7 +14,7 @@ interface ProjectSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
-  onDelete: () => void;
+  onDelete: (id: number) => void;
 }
 
 export default function ProjectSettings({ project, isOpen, onClose, onUpdate, onDelete }: ProjectSettingsProps) {
@@ -92,7 +92,7 @@ export default function ProjectSettings({ project, isOpen, onClose, onUpdate, on
         throw new Error(response.error || 'Failed to delete project');
       }
 
-      onDelete();
+      onDelete(project.id);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete project');

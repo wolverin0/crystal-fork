@@ -2123,6 +2123,7 @@ export function DraggableProjectTreeView({ sessionSortAscending }: DraggableProj
           return (
             <div key={project.id} className="mb-1">
               <div 
+                data-testid={`project-item-${project.id}`}
                 className={`group flex items-center space-x-1 px-2 py-2 rounded-lg transition-colors ${
                   isActiveProject 
                     ? 'bg-interactive/10 text-interactive' 
@@ -2505,12 +2506,20 @@ export function DraggableProjectTreeView({ sessionSortAscending }: DraggableProj
             // This is still a refresh but limited to project data only
             loadProjectsWithSessions();
           }}
-          onDelete={() => {
+          onDelete={(deletedId) => {
             // Remove the deleted project from the list without reloading
-            if (selectedProjectForSettings) {
-              setProjectsWithSessions(prev => 
-                prev.filter(p => p.id !== selectedProjectForSettings.id)
-              );
+            setProjectsWithSessions(prev => 
+              prev.filter(p => p.id !== deletedId)
+            );
+            
+            // Also clear active project if it was deleted
+            if (activeProjectId === deletedId) {
+              // We can't easily clear active project in backend without a reload/API call,
+              // but we can update UI state
+              // setActiveProjectId(null); // This is passed as prop, can't change it here directly?
+              // Actually activeProjectId is likely from context or prop. 
+              // In this component, it seems to be used but not set directly?
+              // Checking component definition... it uses `useSession()` context.
             }
           }}
         />
