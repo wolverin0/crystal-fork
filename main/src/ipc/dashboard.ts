@@ -102,16 +102,21 @@ export function registerDashboardHandlers(ipcMain: IpcMain, services: AppService
       event.sender.send('dashboard:update', { projectId, data: initialData, isPartial: true });
 
       // Start async operations in parallel
-      const fetchPromise = execAsync('git fetch origin', { cwd: project.path, timeout: 15000 }).catch(error => {
+      const fetchPromise = execAsync('git fetch origin', { cwd: project.path, timeout: 5000 }).catch(error => {
         console.warn('Failed to fetch from origin:', error);
       });
 
       const mainBranchPromise = getMainBranchStatusAsync(project.path, mainBranch);
       const remotesPromise = getRemoteStatuses(project.path, mainBranch);
+      const worktreesPromise = worktreeManager.listWorktrees(project.path).catch(() => []);
 
       // Get all sessions for this project
       const sessions = databaseService.getAllSessions(projectId);
       const activeSessions = sessions.filter(session => !session.archived);
+
+      // Wait for worktrees list before processing sessions to avoid N+1 git calls
+      const worktrees = await worktreesPromise;
+      const worktreeMap = new Map(worktrees.map(w => [w.path, w.branch]));
 
       // Process sessions in parallel with progressive updates
       const sessionPromises = activeSessions.map(async (session) => {
@@ -119,7 +124,8 @@ export function registerDashboardHandlers(ipcMain: IpcMain, services: AppService
           const branchInfo = await getSessionBranchInfoAsync(
             session,
             project.path,
-            mainBranch
+            mainBranch,
+            worktreeMap.get(session.worktree_path)
           );
           if (branchInfo) {
             // Send individual session update
@@ -228,6 +234,10 @@ export function registerDashboardHandlers(ipcMain: IpcMain, services: AppService
       const sessions = databaseService.getAllSessions(projectId);
       const sessionBranches: SessionBranchInfo[] = [];
 
+      // Pre-fetch worktrees
+      const worktrees = await worktreeManager.listWorktrees(project.path).catch(() => []);
+      const worktreeMap = new Map(worktrees.map(w => [w.path, w.branch]));
+
       // Process sessions in batches to prevent overwhelming git
       const BATCH_SIZE = 5;
       for (let i = 0; i < sessions.length; i += BATCH_SIZE) {
@@ -239,7 +249,8 @@ export function registerDashboardHandlers(ipcMain: IpcMain, services: AppService
               return await getSessionBranchInfoAsync(
                 session,
                 project.path,
-                mainBranch
+                mainBranch,
+                worktreeMap.get(session.worktree_path)
               );
             } catch (error) {
               console.error(`Failed to get branch info for session ${session.id}:`, error);
@@ -590,7 +601,8 @@ async function getSessionBranchInfo(
 async function getSessionBranchInfoAsync(
   session: { id: string; name: string; worktree_path: string; base_commit?: string; base_branch?: string },
   projectPath: string,
-  mainBranch: string
+  mainBranch: string,
+  preFetchedBranch?: string
 ): Promise<SessionBranchInfo | null> {
   try {
     // Check if worktree still exists
@@ -598,12 +610,16 @@ async function getSessionBranchInfoAsync(
       return null;
     }
 
-    // Get the branch name from the worktree
-    const branchResult = await execAsync('git branch --show-current', { 
-      cwd: session.worktree_path,
-      timeout: 5000
-    });
-    const branchName = branchResult.stdout.trim();
+    let branchName = preFetchedBranch;
+    
+    if (!branchName) {
+      // Fallback to git command if not pre-fetched
+      const branchResult = await execAsync('git branch --show-current', { 
+        cwd: session.worktree_path,
+        timeout: 2000
+      });
+      branchName = branchResult.stdout.trim();
+    }
 
     if (!branchName) {
       return null;
@@ -730,13 +746,43 @@ function checkUncommittedChanges(worktreePath: string): boolean {
 }
 
 async function checkUncommittedChangesAsync(worktreePath: string): Promise<boolean> {
+
   try {
-    const result = await execAsync('git status --porcelain', { 
+
+    // git diff --quiet returns exit code 1 if there are changes, 0 if clean
+
+    await execAsync('git diff --quiet HEAD', { 
+
       cwd: worktreePath, 
-      timeout: 5000 
+
+      timeout: 2000 
+
     });
-    return result.stdout.trim().length > 0;
-  } catch {
+
+    // If we get here, exit code was 0, so no changes (except untracked)
+
+    
+
+    // Also check for untracked files
+
+    const untracked = await execAsync('git ls-files --others --exclude-standard', {
+
+        cwd: worktreePath,
+
+        timeout: 2000
+
+    });
+
+    return untracked.stdout.trim().length > 0;
+
+  } catch (error: any) {
+
+    // Exit code 1 means changes found
+
+    if (error.code === 1) return true;
+
     return false;
+
   }
+
 }
