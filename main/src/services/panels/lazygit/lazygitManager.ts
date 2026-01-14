@@ -20,40 +20,7 @@ export class LazygitManager extends AbstractCliManager {
   }
 
   protected buildCommandArgs(options: any): string[] {
-    const { sessionId } = options;
-    const configPath = this.generateConfig(sessionId);
-    return ['--use-config-file', configPath];
-  }
-
-  private generateConfig(sessionId: string): string {
-    const tempDir = os.tmpdir();
-    const configPath = path.join(tempDir, `lazygit-config-${sessionId}.yml`);
-    
-    const configContent = `
-gui:
-  nerdFontsVersion: "3"
-  showFileTree: true
-  showIcons: true
-  showBottomLine: false
-git:
-  autoFetch: false
-  paging:
-    colorArg: always
-    pager: delta --dark --paging=never
-update:
-  method: never
-reporting: 'off'
-`;
-    // Note: We disable autoFetch for speed. We disable updates/reporting for privacy/stability.
-    
-    try {
-      fs.writeFileSync(configPath, configContent);
-    } catch (e) {
-      console.error('Failed to create lazygit config:', e);
-      return ''; // Fallback to default
-    }
-    
-    return configPath;
+    return []; 
   }
 
   protected async getCliExecutablePath(): Promise<string> {
