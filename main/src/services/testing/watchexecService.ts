@@ -44,6 +44,11 @@ export class WatchexecService extends EventEmitter {
     // We watch common code extensions
     const child = spawn('watchexec', [
       '--exts', 'ts,js,py,go,rs,cpp,c,h,txt', 
+      '--ignore', 'node_modules',
+      '--ignore', '.git',
+      '--ignore', 'dist',
+      '--ignore', 'build',
+      '--ignore', '*.log',
       '--restart', 
       '--clear', 
       '--watch', worktreePath,

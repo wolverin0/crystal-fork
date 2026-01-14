@@ -22,20 +22,20 @@ interface GitStatusCache {
 export class GitStatusManager extends EventEmitter {
   private cache: GitStatusCache = {};
   // Smart visibility-aware polling for active sessions only
-  private readonly CACHE_TTL_MS = 5000; // 5 seconds cache
+  private readonly CACHE_TTL_MS = 10000; // 10 seconds cache (increased from 5s)
   private refreshDebounceTimers: Map<string, NodeJS.Timeout> = new Map();
-  private readonly DEBOUNCE_MS = 2000; // 2 seconds debounce to batch rapid changes
+  private readonly DEBOUNCE_MS = 5000; // 5 seconds debounce (increased from 2s)
   private gitLogger: GitStatusLogger;
   private fileWatcher: GitFileWatcher;
   
   // Throttling for UI events
   private eventThrottleTimer: NodeJS.Timeout | null = null;
   private pendingEvents: Map<string, { type: 'loading' | 'updated', data?: GitStatus }> = new Map();
-  private readonly EVENT_THROTTLE_MS = 100; // Throttle UI events to prevent flooding
+  private readonly EVENT_THROTTLE_MS = 200; // 200ms throttle (increased from 100ms)
   
   // Concurrent operation limiting
   private activeOperations = 0;
-  private readonly MAX_CONCURRENT_OPERATIONS = 3; // Reduced to limit CPU usage
+  private readonly MAX_CONCURRENT_OPERATIONS = 2; // Reduced to 2 to limit CPU usage
   private operationQueue: Array<() => Promise<void>> = [];
   
   // Cancellation support

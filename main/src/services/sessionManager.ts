@@ -63,6 +63,7 @@ export class SessionManager extends EventEmitter {
   private watchexecService?: WatchexecService;
   private piperService?: PiperService;
   private crystalMindService?: CrystalMindService;
+  private panelOutputBuffers = new Map<string, { timer: NodeJS.Timeout, buffer: { type: string, data: string }[] }>();
 
   constructor(
     public db: DatabaseService, 
@@ -898,6 +899,35 @@ export class SessionManager extends EventEmitter {
     return this.db.getConversationMessages(id);
   }
 
+  private bufferPanelOutput(panelId: string, type: string, data: string): void {
+    if (!this.panelOutputBuffers.has(panelId)) {
+      this.panelOutputBuffers.set(panelId, { timer: setTimeout(() => this.flushPanelOutputBuffer(panelId), 200), buffer: [] });
+    }
+    
+    const bufferEntry = this.panelOutputBuffers.get(panelId)!;
+    bufferEntry.buffer.push({ type, data });
+    
+    // Clear existing timer and restart (debounce)
+    clearTimeout(bufferEntry.timer);
+    bufferEntry.timer = setTimeout(() => this.flushPanelOutputBuffer(panelId), 200);
+  }
+
+  private flushPanelOutputBuffer(panelId: string): void {
+    const entry = this.panelOutputBuffers.get(panelId);
+    if (!entry || entry.buffer.length === 0) return;
+    
+    const items = [...entry.buffer];
+    entry.buffer = []; // Clear buffer immediately
+    this.panelOutputBuffers.delete(panelId); // Remove entry
+    
+    // Batch insert using a transaction if possible, or loop
+    // DB service doesn't have batch insert for panel outputs yet, so we loop.
+    // Ideally we should add batch insert to DB service for max performance.
+    for (const item of items) {
+      this.db.addPanelOutput(panelId, item.type as any, item.data);
+    }
+  }
+
   // Panel-based methods for Claude panels (use panel_id instead of session_id)
   addPanelOutput(panelId: string, output: Omit<SessionOutput, 'sessionId'>): void {
     const panel = this.db.getPanel(panelId);
@@ -923,7 +953,8 @@ export class SessionManager extends EventEmitter {
       ? JSON.stringify(output.data) 
       : output.data as string;
     
-    this.db.addPanelOutput(panelId, output.type, dataToStore);
+    // Buffer the DB write to reduce IO
+    this.bufferPanelOutput(panelId, output.type, dataToStore);
 
     // Security Scan (The "Worker Bee")
     if (this.gitleaksService && (output.type === 'stdout' || output.type === 'json')) {
