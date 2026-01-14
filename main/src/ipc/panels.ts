@@ -169,7 +169,17 @@ export function registerPanelHandlers(ipcMain: IpcMain, services: AppServices) {
     } else if (panel.type === 'lazygit') {
       const cwd = options?.cwd || process.cwd();
       const factory = getCliManagerFactory();
-      const lazygitManager = factory.getManager('lazygit');
+      let lazygitManager = factory.getManager('lazygit');
+      
+      if (!lazygitManager) {
+        // Create the manager if it doesn't exist
+        lazygitManager = await factory.createManager('lazygit', {
+          sessionManager: services.sessionManager,
+          logger: services.logger,
+          configManager: services.configManager
+        });
+      }
+      
       if (lazygitManager) {
         await lazygitManager.startPanel(panel.id, panel.sessionId, cwd, '');
       }
