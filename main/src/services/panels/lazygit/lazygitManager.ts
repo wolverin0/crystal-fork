@@ -1,6 +1,8 @@
 import { AbstractCliManager } from '../cli/AbstractCliManager';
 import type { ConversationMessage } from '../../../database/models';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
 
 export class LazygitManager extends AbstractCliManager {
   protected getCliToolName(): string {
@@ -18,17 +20,48 @@ export class LazygitManager extends AbstractCliManager {
   }
 
   protected buildCommandArgs(options: any): string[] {
-    return []; // No default args needed, just run 'lazygit'
+    const { sessionId } = options;
+    const configPath = this.generateConfig(sessionId);
+    return ['--use-config-file', configPath];
+  }
+
+  private generateConfig(sessionId: string): string {
+    const tempDir = os.tmpdir();
+    const configPath = path.join(tempDir, `lazygit-config-${sessionId}.yml`);
+    
+    const configContent = `
+gui:
+  nerdFontsVersion: "3"
+  showFileTree: true
+  showIcons: true
+  showBottomLine: false
+git:
+  autoFetch: false
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never
+update:
+  method: never
+reporting: 'off'
+`;
+    // Note: We disable autoFetch for speed. We disable updates/reporting for privacy/stability.
+    
+    try {
+      fs.writeFileSync(configPath, configContent);
+    } catch (e) {
+      console.error('Failed to create lazygit config:', e);
+      return ''; // Fallback to default
+    }
+    
+    return configPath;
   }
 
   protected async getCliExecutablePath(): Promise<string> {
     const config = this.configManager?.getConfig();
-    // Assuming we might add a config setting later, but for now default to 'lazygit'
     return 'lazygit';
   }
 
   protected parseCliOutput(data: string, panelId: string, sessionId: string): any[] {
-    // Lazygit is a TUI, so we just treat everything as stdout
     return [{
       panelId,
       sessionId,
@@ -43,7 +76,15 @@ export class LazygitManager extends AbstractCliManager {
   }
 
   protected async cleanupCliResources(sessionId: string): Promise<void> {
-    // Nothing to clean up
+    const tempDir = os.tmpdir();
+    const configPath = path.join(tempDir, `lazygit-config-${sessionId}.yml`);
+    try {
+      if (fs.existsSync(configPath)) {
+        fs.unlinkSync(configPath);
+      }
+    } catch (e) {
+      // Ignore cleanup error
+    }
   }
 
   protected async getCliEnvironment(options: any): Promise<{ [key: string]: string }> {
